@@ -11,7 +11,8 @@ Gesamtprojekt: Server-Plugins und Fabric-Mods fuer Minecraft 26.2, aufgebaut als
 | `PeakStats/` | Statistik-Modul mit Web-Oberflaeche | spaeter |
 | `ServerPackKeeper/` | Kleines Zusatzprojekt, spaeter (derzeit nur die Vorlage) | spaeter |
 | `_archiv/` | Unveraenderte Originalstaende (nicht bearbeiten) | |
-| `tools/` | Skripte: alles bauen, Jars in den Test-Server kopieren | |
+| `tools/` | Skripte: alles bauen, Jars in den Test-Server kopieren, neues Modul anlegen | |
+| `ModuleTemplate/` | Vorlage für neue Module, siehe `docs/NEUES_MODUL.md` | |
 | `run/` | Gemeinsamer Test-Server fuer alle Plugins | |
 | `docs/` | Gesamtplan und Architektur | |
 
