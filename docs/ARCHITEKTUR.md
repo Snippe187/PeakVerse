@@ -1,4 +1,4 @@
-# PeakVerse – Architektur
+﻿# PeakVerse – Architektur
 
 ## Überblick
 
@@ -38,7 +38,7 @@ Module an/aus gilt erst nach einem Serverneustart.
 | `PeakCoreApi` | `isModded`, `client`, `isAdmin`, Modul-Registrierung für den Netzwerkkanal |
 | `ModuleRegistration` / `ModuleMessageHandler` | Nutzdaten an die Mod eines Spielers senden und empfangen (Kanal `peakcore:main`, Modul-ID im Umschlag) |
 | `PlayerHandshakeEvent` | Ein Spieler hat den Handshake abgeschlossen |
-| `PackSink` / `PackPaths` | Dateien fürs Server-Resource-Pack beitragen (Pack-Bau ab Phase 9) |
+| `PackSink` / `PackPaths` | Dateien fürs Server-Resource-Pack beitragen (Pack-Bau: siehe unten) |
 
 Regeln:
 - **Rechte prüft immer der Server** (`PeakCoreApi.isAdmin`), nie die Angabe der Mod.
@@ -54,3 +54,11 @@ Bleibt unverändert: Datenordner `plugins/PeakSound`, Befehle (`/peaksound`, `/p
 
 - Neues Modul anlegen: [NEUES_MODUL.md](NEUES_MODUL.md)
 - Gesamtplan: [PLAN.md](PLAN.md)
+
+## Das Server-Pack (seit Phase 9)
+
+`/peakcore pack rebuild` ruft `contributePack` aller laufenden Module auf und baut `plugins/PeakCore/pack/pack-<sha1>.zip`.
+- **Deterministisch:** gleiche Dateien ergeben dieselben Bytes und denselben SHA1 (sortiert, fester Zeitstempel, ohne Kompression).
+- **Ein Pfad, ein Besitzer:** liefern zwei Module denselben Pfad, fehlt das zweite ganz im Pack und `/peakcore pack status` nennt den Grund. Das Zusammenführen geteilter Vanilla-Dateien kommt in Phase 11.
+- `pack.mcmeta` kommt aus der Core-Config (`pack.description`, `pack.format-major/minor`), nicht von Modulen.
+- Versand an die Spieler folgt in Phase 10.

@@ -39,7 +39,7 @@ Der Alpha-Stand laeuft schon auf einem Server mit Freunden. Alles Neue kommt dor
 - [x] **8. API-Feinschliff und Modul-Vorlage.** Öffentliche API festziehen (Pack-Beitrag, Events, Kanal), Beispiel-Modul-Vorlage, Architektur-Doku. *Ergebnis:* neues Modul in wenigen Schritten anlegbar.
 
 ### Block C - Pack-Dienst im Core
-- [ ] **9. Pack bauen.** Deterministisches ZIP, `pack.mcmeta`, Beitraege je Namensraum, SHA1, Cache, Tests (stabiler Hash).
+- [x] **9. Pack bauen.** Deterministisches ZIP, `pack.mcmeta`, Beitraege je Namensraum, SHA1, Cache, Tests (stabiler Hash).
 - [ ] **10. Webserver und Versand.** Eingebauter HTTP-Server, Port/URL-Config, externe URL als Ausweg, Versand per Paper-API, Neusenden bei Aenderung, `/peakcore pack status|rebuild|resend`.
 - [ ] **11. Merge und Konflikte.** Basis-Pack (Upload) plus Modul-Beitraege, Zusammenfuehren der geteilten Vanilla-Dateien (Item-Definitionen, Blockstates, Lang), Konflikt-Erkennung fuer Pfade und Block-Zustaende, Tests.
 - [ ] **12. Versionen, Testmodus, Varianten.** Pack-Versionen mit Zurueckrollen, Testmodus fuer ausgewaehlte Spieler per Befehl, Varianten Standard/Lite, PNG-Optimierung.
