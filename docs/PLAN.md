@@ -32,7 +32,7 @@ Der Alpha-Stand laeuft schon auf einem Server mit Freunden. Alles Neue kommt dor
 - [x] **5. Core-Client-Mod.** Fabric-Mod `peakcore-client`: Kanal, Handshake, Modul-Routing, Admin-Status. *Test:* Mod meldet sich beim Core.
 
 ### Block B - PeakSound als Modul
-- [ ] **6. PeakSound-Server als Modul.** `depend: [PeakCore]`, Netzwerk auf Modul-Kanal umstellen, Handshake-Teile in den Core verlagern, Name/Daten/Rechte unveraendert, alter Kanal `peaksound:main` bleibt (Alpha-Mods funktionieren weiter). *Test:* alle bisherigen Tests, Testserver-Regression und Alpha-Kompatibilitaetstest.
+- [x] **6. PeakSound-Server als Modul.** `depend: [PeakCore]`, Netzwerk auf Modul-Kanal umstellen, Handshake-Teile in den Core verlagern, Name/Daten/Rechte unveraendert, alter Kanal `peaksound:main` bleibt (Alpha-Mods funktionieren weiter). *Test:* alle bisherigen Tests, Testserver-Regression und Alpha-Kompatibilitaetstest.
 - [ ] **7. PeakSound-Mod als Modul.** Mod haengt an der Core-Mod, Protokollversion hochziehen, Menues und Audio unveraendert. *Test:* Upload, Wiedergabe, Radio im Spiel.
 - [ ] **8. API-Feinschliff und Modul-Vorlage.** Öffentliche API festziehen (Pack-Beitrag, Events, Kanal), Beispiel-Modul-Vorlage, Architektur-Doku. *Ergebnis:* neues Modul in wenigen Schritten anlegbar.
 

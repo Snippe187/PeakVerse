@@ -42,7 +42,7 @@ foreach ($m in $modules) {
             $plugins = Join-Path $root 'run\server\plugins'
             New-Item -ItemType Directory -Force $plugins | Out-Null
             # aeltere Jars desselben Moduls (z. B. anderer Dateiname) entfernen, sonst meldet Paper doppelte Plugin-Namen
-            Get-ChildItem $plugins -Filter "$($m.Name)*.jar" | Where-Object { $_.Name -ne $jar.Name } | Remove-Item -Force
+            Get-ChildItem $plugins -Filter "$($m.Name)-*.jar" | Where-Object { $_.Name -ne $jar.Name } | Remove-Item -Force
             Copy-Item $jar.FullName (Join-Path $plugins $jar.Name) -Force
             Write-Host "  installiert in $plugins"
         }
