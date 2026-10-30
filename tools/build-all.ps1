@@ -9,6 +9,7 @@ $dist = Join-Path $root 'dist'
 
 # Modul-Ordner mit Gradle-Projekt; Server-Plugin-Jar und Client-Mod-Jar je Modul (relativ zum Modul-Ordner)
 $modules = @(
+    @{ Name = 'PeakCore';  Plugin = 'core-plugin\build\libs'; Mod = $null },   # Reihenfolge: Basis zuerst
     @{ Name = 'PeakSound'; Plugin = 'paper-plugin\build\libs'; Mod = 'fabric-mod\build\libs' }
 )
 
@@ -28,6 +29,7 @@ foreach ($m in $modules) {
     } finally { Pop-Location }
 
     foreach ($kind in 'Plugin', 'Mod') {
+        if (-not $m[$kind]) { continue }   # Modul ohne Mod-Teil
         $libs = Join-Path $dir $m[$kind]
         # nur das Haupt-Jar, keine Quell-Jars
         $jar = Get-ChildItem $libs -Filter '*.jar' -ErrorAction SilentlyContinue | Where-Object { $_.Name -notmatch 'sources|dev' } | Sort-Object LastWriteTime | Select-Object -Last 1

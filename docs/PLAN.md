@@ -26,7 +26,7 @@ Der Alpha-Stand laeuft schon auf einem Server mit Freunden. Alles Neue kommt dor
 
 ### Block A - Fundament
 - [x] **1. Gerüst und Übernahme.** PeakSound aus dem Original nach `PeakVerse/PeakSound` kopieren, je Modul eigenes Git-Repo, Gradle-Projekte trennen, `tools/build-all`, gemeinsamer Test-Server. *Ergebnis:* alles baut und läuft wie vorher.
-- [ ] **2. PeakCore-Grundgerüst.** Projekte `core-api`, `core-protocol`, `core-plugin`; Plugin laedt, registriert den Dienst im ServicesManager, Versions- und Kompatibilitaetspruefung, `/peakcore modules`. *Test:* Core laedt allein.
+- [x] **2. PeakCore-Grundgerüst.** Projekte `core-api`, `core-protocol`, `core-plugin`; Plugin laedt, registriert den Dienst im ServicesManager, Versions- und Kompatibilitaetspruefung, `/peakcore modules`. *Test:* Core laedt allein.
 - [ ] **3. Kanal und Umschlag.** Kanal `peakcore:main`, Umschlag `[Modul-ID, Nutzdaten]`, Codec, Grenzen, Tests. *Test:* Unit-Tests fuer Umschlag und Fehlerfaelle.
 - [ ] **4. Handshake und Admin-Prüfung.** Hello/Ack mit Core- und Modulliste, Mod-Erkennung, Nicht-Mod-Hinweis, Diagnose, Admin-Pruefung (OP + `peakcore.admin`) im Core. *Test:* Handshake auf dem Testserver.
 - [ ] **5. Core-Client-Mod.** Fabric-Mod `peakcore-client`: Kanal, Handshake, Modul-Routing, Admin-Status. *Test:* Mod meldet sich beim Core.
