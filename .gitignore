@@ -1,0 +1,10 @@
+# Module haben eigene Git-Repositories
+PeakCore/
+PeakSound/
+TexturePeak/
+PeakStats/
+ServerPackKeeper/
+_archiv/
+# Build- und Laufzeit-Ausgaben
+dist/
+run/
