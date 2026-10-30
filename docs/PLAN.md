@@ -29,7 +29,7 @@ Der Alpha-Stand laeuft schon auf einem Server mit Freunden. Alles Neue kommt dor
 - [x] **2. PeakCore-Grundgerüst.** Projekte `core-api`, `core-protocol`, `core-plugin`; Plugin laedt, registriert den Dienst im ServicesManager, Versions- und Kompatibilitaetspruefung, `/peakcore modules`. *Test:* Core laedt allein.
 - [x] **3. Kanal und Umschlag.** Kanal `peakcore:main`, Umschlag `[Modul-ID, Nutzdaten]`, Codec, Grenzen, Tests. *Test:* Unit-Tests fuer Umschlag und Fehlerfaelle.
 - [x] **4. Handshake und Admin-Prüfung.** Hello/Ack mit Core- und Modulliste, Mod-Erkennung, Nicht-Mod-Hinweis, Diagnose, Admin-Pruefung (OP + `peakcore.admin`) im Core. *Test:* Handshake auf dem Testserver.
-- [ ] **5. Core-Client-Mod.** Fabric-Mod `peakcore-client`: Kanal, Handshake, Modul-Routing, Admin-Status. *Test:* Mod meldet sich beim Core.
+- [x] **5. Core-Client-Mod.** Fabric-Mod `peakcore-client`: Kanal, Handshake, Modul-Routing, Admin-Status. *Test:* Mod meldet sich beim Core.
 
 ### Block B - PeakSound als Modul
 - [ ] **6. PeakSound-Server als Modul.** `depend: [PeakCore]`, Netzwerk auf Modul-Kanal umstellen, Handshake-Teile in den Core verlagern, Name/Daten/Rechte unveraendert, alter Kanal `peaksound:main` bleibt (Alpha-Mods funktionieren weiter). *Test:* alle bisherigen Tests, Testserver-Regression und Alpha-Kompatibilitaetstest.

@@ -9,7 +9,7 @@ $dist = Join-Path $root 'dist'
 
 # Modul-Ordner mit Gradle-Projekt; Server-Plugin-Jar und Client-Mod-Jar je Modul (relativ zum Modul-Ordner)
 $modules = @(
-    @{ Name = 'PeakCore';  Plugin = 'core-plugin\build\libs'; Mod = $null },   # Reihenfolge: Basis zuerst
+    @{ Name = 'PeakCore';  Plugin = 'core-plugin\build\libs'; Mod = 'core-mod\build\libs' },   # Reihenfolge: Basis zuerst
     @{ Name = 'PeakSound'; Plugin = 'paper-plugin\build\libs'; Mod = 'fabric-mod\build\libs' }
 )
 
