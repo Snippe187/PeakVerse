@@ -1,0 +1,2 @@
+# Standard-Config des Moduls "Example" (wird nach plugins/Example/config.yml kopiert, falls dort noch keine liegt)
+greeting: Hallo vom Beispiel-Modul
