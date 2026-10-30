@@ -1,0 +1,59 @@
+name: PeakCore
+version: '${version}'
+main: de.peakverse.core.plugin.PeakCorePlugin
+api-version: '26.2'
+description: "PeakVerse: Basis (API, Kanal zur Mod) und eingebaute Module (PeakSound, spaeter TexturePeak)."
+softdepend: [voicechat]
+commands:
+  peakcore:
+    description: Version, Module, Kanal-Status und Spieler mit Mod von PeakCore
+    usage: /peakcore <version|modules|status|players>
+    permission: peakcore.admin
+  peaksound:
+    description: PeakSound-Diagnose fuer Operatoren
+    usage: /peaksound <eqtest|place|play> ...
+    permission: peaksound.admin
+  peaksoundvote:
+    description: Abstimmen, den laufenden Song der Jukebox in deiner Naehe zu ueberspringen
+    usage: /peaksoundvote
+permissions:
+  peakcore.admin:
+    description: PeakCore-Befehle und Verwaltung
+    default: op
+  peaksound.upload:
+    description: Eigene Songs hochladen
+    default: true
+  peaksound.library:
+    description: Song-Bibliothek benutzen (suchen, Favoriten, auf Platte schreiben)
+    default: true
+  peaksound.library.manage.own:
+    description: Eigene Songs umbenennen und loeschen
+    default: true
+  peaksound.library.manage.any:
+    description: Fremde Songs umbenennen und loeschen
+    default: op
+  peaksound.queue:
+    description: Songs wuenschen (Wunsch-Warteschlange)
+    default: true
+  peaksound.vote:
+    description: Bei der Skip-Abstimmung mitmachen
+    default: true
+  peaksound.place:
+    description: PeakSound-Bloecke setzen
+    default: true
+  peaksound.radio:
+    description: Taschenradio benutzen
+    default: true
+  peaksound.limit.unlimited:
+    description: Kein Songlimit beim Hochladen
+    default: false
+  peaksound.admin:
+    description: Zugriff auf PeakSound-Diagnosebefehle
+    default: op
+# Werden von Paper beim ersten Start von Maven Central geladen (eigene Jars, LGPL bleibt austauschbar).
+libraries:
+  - net.jthink:jaudiotagger:3.0.1
+  - com.googlecode.soundlibs:jlayer:1.0.1.4
+  - org.jcraft:jorbis:0.0.17
+  - org.jflac:jflac-codec:1.5.2
+  - net.sourceforge.javaflacencoder:java-flac-encoder:0.3.7

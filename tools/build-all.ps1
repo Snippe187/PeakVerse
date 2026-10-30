@@ -7,10 +7,12 @@ $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 $dist = Join-Path $root 'dist'
 
-# Modul-Ordner mit Gradle-Projekt; Server-Plugin-Jar und Client-Mod-Jar je Modul (relativ zum Modul-Ordner)
+# Modul-Ordner mit Gradle-Projekt; Server-Plugin-Jar und Client-Mod-Jar je Modul (relativ zum Modul-Ordner).
+# Das Server-Plugin ist ein einziges All-in-One-Jar (PeakCore-<Version>.jar), das Bundle aus Core und Modulen zusammensetzt.
 $modules = @(
-    @{ Name = 'PeakCore';  Plugin = 'core-plugin\build\libs'; Mod = 'core-mod\build\libs' },   # Reihenfolge: Basis zuerst
-    @{ Name = 'PeakSound'; Plugin = 'paper-plugin\build\libs'; Mod = 'fabric-mod\build\libs' }
+    @{ Name = 'PeakCore';  Mod = 'core-mod\build\libs' },      # Reihenfolge: Basis zuerst
+    @{ Name = 'PeakSound'; Mod = 'fabric-mod\build\libs' },
+    @{ Name = 'Bundle';    Plugin = 'build\libs'; Dist = 'PeakCore'; JarPrefix = 'PeakCore' }   # zuletzt: braucht die Module
 )
 
 foreach ($m in $modules) {
@@ -34,7 +36,8 @@ foreach ($m in $modules) {
         # nur das Haupt-Jar, keine Quell-Jars
         $jar = Get-ChildItem $libs -Filter '*.jar' -ErrorAction SilentlyContinue | Where-Object { $_.Name -notmatch 'sources|dev' } | Sort-Object LastWriteTime | Select-Object -Last 1
         if (-not $jar) { Write-Host "  kein $kind-Jar gefunden in $libs"; continue }
-        $target = Join-Path $dist (Join-Path $m.Name $kind)
+        $distName = if ($m.Dist) { $m.Dist } else { $m.Name }
+        $target = Join-Path $dist (Join-Path $distName $kind)
         New-Item -ItemType Directory -Force $target | Out-Null
         Copy-Item $jar.FullName $target -Force
         Write-Host "  $kind -> $target\$($jar.Name)"
@@ -42,7 +45,9 @@ foreach ($m in $modules) {
             $plugins = Join-Path $root 'run\server\plugins'
             New-Item -ItemType Directory -Force $plugins | Out-Null
             # aeltere Jars desselben Moduls (z. B. anderer Dateiname) entfernen, sonst meldet Paper doppelte Plugin-Namen
-            Get-ChildItem $plugins -Filter "$($m.Name)-*.jar" | Where-Object { $_.Name -ne $jar.Name } | Remove-Item -Force
+            Get-ChildItem $plugins -Filter "$($m.JarPrefix)-*.jar" | Where-Object { $_.Name -ne $jar.Name } | Remove-Item -Force
+            # PeakSound ist seit dem All-in-One-Jar kein eigenes Plugin mehr; ein altes Jar wuerde den Befehl /peaksound doppelt belegen
+            Get-ChildItem $plugins -Filter 'PeakSound-*.jar' | Remove-Item -Force
             Copy-Item $jar.FullName (Join-Path $plugins $jar.Name) -Force
             Write-Host "  installiert in $plugins"
         }
