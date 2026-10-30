@@ -14,6 +14,14 @@ Regeln: Server ist massgeblich; Spieler ohne Mod werden nie gekickt; keine Platz
 - Vanilla-Texturen fuer Vorschauen kommen aus dem eigenen Spiel des Admins, nie vom Server oder aus dem Plugin.
 - Texturen-Modul zuerst fuer Rüstung, Fähigkeiten: Werte, Effekte, Partikel.
 
+## Kompatibilität mit der Alpha-Version (verbindlich)
+Der Alpha-Stand laeuft schon auf einem Server mit Freunden. Alles Neue kommt dort als **Update**; bestehende Anlagen (Jukeboxen, Lautsprecher, DJ-Pulte, Radios, Displays, Bibliothek, Songs, Playlists, Einstellungen) bleiben weiter benutzbar.
+- **Daten:** Plugin-Name `PeakSound`, Ordner `plugins/PeakSound/` und alle Dateien (`blocks.yml`, `songs.json`, `jukebox-*.json`, `radio.json`, `displays.json`, ...) behalten ihr Format. Neue Felder nur zusaetzlich mit Standardwert; Aenderungen am Format nur mit Migration (vorwaerts) und automatischer Sicherung vor dem ersten Start der neuen Version.
+- **Welt:** Block-Zustaende (Notenblock `bit` Ton 15-24, nummerierte Lautsprecher `custom_head`), Item-Markierung `peaksound:type`, `custom_model_data`-Strings, Rezept-Schluessel, Befehle und Rechte (`peaksound.*`) bleiben unveraendert.
+- **Protokoll:** Das PeakSound-Modul behaelt zusaetzlich den alten Kanal `peaksound:main` (Protokoll 2), damit Spieler mit der **alten Alpha-Mod** weiter funktionieren, bis sie aktualisieren. Neue Funktionen (Pack-Empfang, Texturen) gibt es nur mit der neuen Mod.
+- **Installation:** Der Server braucht zusaetzlich das PeakCore-Jar (PeakSound laedt ohne PeakCore nicht, das ist so gewollt). Sonst aendert sich fuer die Spieler nichts.
+- **Test:** Jede Phase hat einen Alpha-Kompatibilitaetstest: neuer Stand startet auf einer Kopie der Alpha-Serverdaten (idealerweise ein `/peaksound backup` vom echten Freunde-Server), alle Anlagen laden und spielen, `/peaksound debug` zeigt keine Fehler.
+
 ## Phasen
 
 ### Block A - Fundament
@@ -24,7 +32,7 @@ Regeln: Server ist massgeblich; Spieler ohne Mod werden nie gekickt; keine Platz
 - [ ] **5. Core-Client-Mod.** Fabric-Mod `peakcore-client`: Kanal, Handshake, Modul-Routing, Admin-Status. *Test:* Mod meldet sich beim Core.
 
 ### Block B - PeakSound als Modul
-- [ ] **6. PeakSound-Server als Modul.** `depend: [PeakCore]`, Netzwerk auf Modul-Kanal umstellen, Handshake-Teile in den Core verlagern, Name/Daten/Rechte unveraendert. *Test:* alle bisherigen Tests und Testserver-Regression.
+- [ ] **6. PeakSound-Server als Modul.** `depend: [PeakCore]`, Netzwerk auf Modul-Kanal umstellen, Handshake-Teile in den Core verlagern, Name/Daten/Rechte unveraendert, alter Kanal `peaksound:main` bleibt (Alpha-Mods funktionieren weiter). *Test:* alle bisherigen Tests, Testserver-Regression und Alpha-Kompatibilitaetstest.
 - [ ] **7. PeakSound-Mod als Modul.** Mod haengt an der Core-Mod, Protokollversion hochziehen, Menues und Audio unveraendert. *Test:* Upload, Wiedergabe, Radio im Spiel.
 - [ ] **8. API-Feinschliff und Modul-Vorlage.** Öffentliche API festziehen (Pack-Beitrag, Events, Kanal), Beispiel-Modul-Vorlage, Architektur-Doku. *Ergebnis:* neues Modul in wenigen Schritten anlegbar.
 
