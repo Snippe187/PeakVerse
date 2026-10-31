@@ -4,3 +4,4 @@ rootProject.name = "bundle"
 // Die Module kommen als Composite Build aus ihren eigenen Ordnern.
 includeBuild("../PeakCore")
 includeBuild("../PeakSound")
+includeBuild("../TexturePeak")

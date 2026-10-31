@@ -46,7 +46,7 @@ Der Alpha-Stand laeuft schon auf einem Server mit Freunden. Alles Neue kommt dor
 - [x] **13. Pack-Empfang in der Mod.** Mod laedt das Pack selbst, Chat-Erinnerung alle 2 Minuten, Aktivierung beim naechsten Beitritt. (Modell-Zuordnung per Code, PeakModels: verschoben auf Phase 14, wo die Regeln sie brauchen. Mod-Teil noch nicht im echten Client geprueft.)
 
 ### Block D - Texturen-Modul
-- [ ] **14. TexturePeak-Server.** Regeln (Item-Typ + Name -> Textur), Eintrags-Datenbank mit Archiv, Pruefung (Item-Typ, PNG-Groesse), Items markieren, `/texturepeak reload`.
+- [x] **14. TexturePeak-Server.** Regeln (Item-Typ + Name -> Textur), Eintrags-Datenbank mit Archiv, Pruefung (Item-Typ, PNG-Groesse), Items markieren, `/texturepeak reload`. (Server-Teil fertig; Item-Markierung per Befehl/Amboss nur im Code und Test geprueft, noch nicht mit einem Spieler im Spiel; Modell-Zuordnung PeakModels entfaellt: Item-Modell `texturepeak:<id>` reicht. Rueckmeldung zu getragener Ruestung folgt in Phase 15.)
 - [ ] **15. Fähigkeiten.** Werte, Effekte, Partikel serverseitig, getragen oder gehalten, Tests.
 
 ### Block E - Web-Oberfläche

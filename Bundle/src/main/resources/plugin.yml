@@ -13,6 +13,10 @@ commands:
     description: PeakSound-Diagnose fuer Operatoren
     usage: /peaksound <eqtest|place|play> ...
     permission: peaksound.admin
+  texturepeak:
+    description: TexturePeak verwalten (Texturen-Regeln, Archiv, Pack)
+    usage: /texturepeak <list|add|remove|archive|restore|apply|check|reload>
+    permission: peakcore.admin
   peaksoundvote:
     description: Abstimmen, den laufenden Song der Jukebox in deiner Naehe zu ueberspringen
     usage: /peaksoundvote
