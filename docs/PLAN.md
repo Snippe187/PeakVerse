@@ -1,4 +1,4 @@
-﻿# PeakVerse - Gesamtplan (20 Phasen)
+# PeakVerse - Gesamtplan (20 Phasen)
 
 Regeln: Server ist massgeblich; Spieler ohne Mod werden nie gekickt; keine Platzhalter; ein Commit pro Aufgabe; Tests fuer Logik; Testliste je Phase; Grenzen ehrlich benennen. Nach jeder Phase gibt es etwas Lauffaehiges zum Testen. Das Original `_archiv/PeakSound-Original` wird nie veraendert.
 
@@ -43,7 +43,7 @@ Der Alpha-Stand laeuft schon auf einem Server mit Freunden. Alles Neue kommt dor
 - [x] **10. Webserver und Versand.** Eingebauter HTTP-Server, Port/URL-Config, externe URL als Ausweg, Versand per Paper-API, Neusenden bei Aenderung, `/peakcore pack status|rebuild|resend`.
 - [x] **11. Merge und Konflikte.** Basis-Pack (Upload) plus Modul-Beitraege, Zusammenfuehren der geteilten Vanilla-Dateien (Item-Definitionen, Blockstates, Lang), Konflikt-Erkennung fuer Pfade und Block-Zustaende, Tests.
 - [x] **12. Versionen, Testmodus, Varianten.** Pack-Versionen mit Zurueckrollen, Testmodus fuer ausgewaehlte Spieler per Befehl, Varianten Standard/Lite, PNG-Optimierung.
-- [ ] **13. Pack-Empfang in der Mod.** Mod laedt das Pack selbst, Chat-Erinnerung alle 2 Minuten, Aktivierung beim naechsten Beitritt, Modell-Zuordnung per Code (PeakModels) im Core.
+- [x] **13. Pack-Empfang in der Mod.** Mod laedt das Pack selbst, Chat-Erinnerung alle 2 Minuten, Aktivierung beim naechsten Beitritt. (Modell-Zuordnung per Code, PeakModels: verschoben auf Phase 14, wo die Regeln sie brauchen. Mod-Teil noch nicht im echten Client geprueft.)
 
 ### Block D - Texturen-Modul
 - [ ] **14. TexturePeak-Server.** Regeln (Item-Typ + Name -> Textur), Eintrags-Datenbank mit Archiv, Pruefung (Item-Typ, PNG-Groesse), Items markieren, `/texturepeak reload`.
