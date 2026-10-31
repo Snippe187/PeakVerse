@@ -46,6 +46,7 @@ val moduleServiceName = "META-INF/services/de.peakverse.core.api.module.PeakModu
 
 val mergeModuleServices by tasks.registering {
     val out = layout.buildDirectory.file("generated/services/$moduleServiceName")
+    dependsOn(configurations.runtimeClasspath) // baut die Jars der Teil-Projekte (sonst steckt ein veraltetes Jar im Gesamt-Jar)
     inputs.files(ownJars)
     outputs.file(out)
     doLast {
@@ -62,7 +63,7 @@ val mergeModuleServices by tasks.registering {
 tasks.jar {
     archiveBaseName = "PeakCore"
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    dependsOn(mergeModuleServices)
+    dependsOn(mergeModuleServices, configurations.runtimeClasspath)
     from({ ownJars.get().map { zipTree(it).matching { exclude(moduleServiceName) } } })
     from(layout.buildDirectory.dir("generated/services"))
     exclude("META-INF/MANIFEST.MF")
