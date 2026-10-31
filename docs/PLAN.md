@@ -47,7 +47,7 @@ Der Alpha-Stand laeuft schon auf einem Server mit Freunden. Alles Neue kommt dor
 
 ### Block D - Texturen-Modul
 - [x] **14. TexturePeak-Server.** Regeln (Item-Typ + Name -> Textur), Eintrags-Datenbank mit Archiv, Pruefung (Item-Typ, PNG-Groesse), Items markieren, `/texturepeak reload`. (Server-Teil fertig; Item-Markierung per Befehl/Amboss nur im Code und Test geprueft, noch nicht mit einem Spieler im Spiel; Modell-Zuordnung PeakModels entfaellt: Item-Modell `texturepeak:<id>` reicht. Rueckmeldung zu getragener Ruestung folgt in Phase 15.)
-- [ ] **15. Fähigkeiten.** Werte, Effekte, Partikel serverseitig, getragen oder gehalten, Tests.
+- [x] **15. Fähigkeiten.** Werte, Effekte, Partikel serverseitig, getragen oder gehalten, Tests. (Effekte und Werte im Spiel mit echtem Spieler geprueft, Partikel nur ohne Fehler im Log, nicht gesehen; Rueckmeldung zu getragener Ruestung: nur Inventar-Symbol, keine Koerper-Textur.)
 
 ### Block E - Web-Oberfläche
 - [ ] **16. Web-Gerüst und Design.** Einmal-Link-Anmeldung, Seiten-Rahmen im Core fuer Module, Design-System (Pixel-Look, DE/EN, Tag/Nacht, Effekte, Sounds), Live-Aktualisierung, Mehrfach-Admin mit Konflikt-Warnung und Protokoll.
