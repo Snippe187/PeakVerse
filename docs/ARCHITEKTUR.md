@@ -1,4 +1,4 @@
-﻿# PeakVerse – Architektur
+# PeakVerse – Architektur
 
 ## Überblick
 
@@ -59,6 +59,8 @@ Bleibt unverändert: Datenordner `plugins/PeakSound`, Befehle (`/peaksound`, `/p
 
 `/peakcore pack rebuild` ruft `contributePack` aller laufenden Module auf und baut `plugins/PeakCore/pack/pack-<sha1>.zip`.
 - **Deterministisch:** gleiche Dateien ergeben dieselben Bytes und denselben SHA1 (sortiert, fester Zeitstempel, ohne Kompression).
-- **Ein Pfad, ein Besitzer:** liefern zwei Module denselben Pfad, fehlt das zweite ganz im Pack und `/peakcore pack status` nennt den Grund. Das Zusammenführen geteilter Vanilla-Dateien kommt in Phase 11.
+- **Ein Pfad, ein Besitzer:** liefern zwei Module denselben Pfad, fehlt das zweite ganz im Pack und `/peakcore pack status` nennt den Grund. Geteilte Vanilla-Dateien werden zusammengeführt (siehe unten).
 - `pack.mcmeta` kommt aus der Core-Config (`pack.description`, `pack.format-major/minor`), nicht von Modulen.
 - **Versand (Phase 10):** eingebauter Webserver (pack.web.enabled, Port 8123) liefert nur /pack/<sha1>.zip; Adresse aus pack.public-url oder pack.external-url (Ausweg: Pack liegt woanders). Gesendet wird per Paper-API mit fester Pack-ID, damit ein neues Pack das alte ersetzt. Alles ist standardmaessig aus.
+
+- **Merge (Phase 11):** Grundlage ist optional ein Basis-Pack (pack.base-file). Zusammenführbar sind Sprachdateien, sounds.json, Blockstates (ariants/multipart), Atlanten und Item-Definitionen (select, ange_dispatch): verschiedene Einträge werden vereinigt, derselbe Eintrag mit anderem Inhalt ist ein Konflikt. Konflikt mit dem Basis-Pack: Basis gewinnt, nur diese Datei fehlt. Konflikt zwischen Modulen: das nach ID spätere Modul fehlt ganz. Die Reihenfolge ist Basis, dann Module nach ID, das Ergebnis also unabhängig von der Ladereihenfolge.
