@@ -1,0 +1,28 @@
+{
+  "gameVersion": "26.2",
+  "versionType": "alpha",
+  "userAgent": "PeakVerse/modrinth-release (github.com/Snippe187/PeakVerse-Releases)",
+  "targets": {
+    "peakcore-plugin": {
+      "projectId": "",
+      "jar": "dist/PeakCore/Plugin/PeakCore-{version}.jar",
+      "changelog": "PeakCore/CHANGELOG.md",
+      "loaders": ["paper", "purpur", "spigot"],
+      "name": "PeakCore Server {version}"
+    },
+    "peakcore-mod": {
+      "projectId": "",
+      "jar": "dist/PeakCore/Mod/PeakCore-{version}.jar",
+      "changelog": "PeakCore/CHANGELOG.md",
+      "loaders": ["fabric"],
+      "name": "PeakCore Mod {version}"
+    },
+    "peaksound-mod": {
+      "projectId": "",
+      "jar": "dist/PeakSound/Mod/PeakSound-{version}.jar",
+      "changelog": "PeakSound/CHANGELOG.md",
+      "loaders": ["fabric"],
+      "name": "PeakSound Mod {version}"
+    }
+  }
+}
