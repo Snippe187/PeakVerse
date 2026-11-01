@@ -5,3 +5,4 @@ rootProject.name = "bundle"
 includeBuild("../PeakCore")
 includeBuild("../PeakSound")
 includeBuild("../TexturePeak")
+includeBuild("../PeakBoard")

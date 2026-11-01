@@ -20,3 +20,7 @@ Auf dem Server liegt **ein einziges Plugin-Jar** (`PeakCore`); jedes Modul darin
 
 Jedes Modul ist ein eigenes Gradle-Projekt mit eigenem Git-Repository, eigener Version und eigenem Changelog.
 Module kennen nur die oeffentliche API von PeakCore, nie einander.
+
+## Lizenz
+
+GPL-3.0 (siehe [LICENSE](LICENSE)). Copyright (C) 2026 PeakVerse-Mitwirkende.

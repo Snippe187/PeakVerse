@@ -12,6 +12,8 @@ $dist = Join-Path $root 'dist'
 $modules = @(
     @{ Name = 'PeakCore';  Mod = 'core-mod\build\libs' },      # Reihenfolge: Basis zuerst
     @{ Name = 'PeakSound'; Mod = 'fabric-mod\build\libs' },
+    @{ Name = 'TexturePeak' },
+    @{ Name = 'PeakBoard' },
     @{ Name = 'Bundle';    Plugin = 'build\libs'; Dist = 'PeakCore'; JarPrefix = 'PeakCore' }   # zuletzt: braucht die Module
 )
 

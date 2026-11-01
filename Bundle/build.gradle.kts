@@ -19,6 +19,7 @@ dependencies {
     // Eingebaute Module: neue Module hier ergaenzen (und ihren Schalter in der config.yml des Cores)
     implementation("de.peaksound:paper-plugin")
     implementation("de.peakverse:texturepeak")
+    implementation("de.peakverse:peakboard")
 
     testImplementation("org.yaml:snakeyaml:2.4")
     testImplementation(platform("org.junit:junit-bom:5.11.4"))
