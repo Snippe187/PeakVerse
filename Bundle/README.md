@@ -1,4 +1,4 @@
-﻿# Bundle - das All-in-One-Plugin
+# Bundle - das All-in-One-Plugin
 
 Setzt das Server-Plugin `PeakCore-<Version>.jar` aus dem Core (`../PeakCore`) und den eingebauten Modulen (`../PeakSound`, spaeter TexturePeak) zusammen. Auf dem Server liegt nur dieses eine Jar.
 

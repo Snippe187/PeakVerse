@@ -1,4 +1,4 @@
-﻿# TexturePeak 2: Plan für die neuen Funktionen
+# TexturePeak 2: Plan für die neuen Funktionen
 
 Auswahl des Besitzers (alles gewünscht, Reihenfolge von mir nach Nutzen und Risiko):
 Editor: Ebenen/Auswahl, Formen/Verlauf, Farbwerkzeuge, Animation. Verwaltung: Sammlungen/Tags, Vorschau im Spiel-Look, Versionen, Massen-Import/Export.
@@ -55,12 +55,12 @@ Regeln wie bisher: eine Stufe = ein Commit je Repo, Tests, Testliste, ehrlich ü
 - **Updates:** Modrinth für Spieler plus GitHub-Releases (öffentliches Release-Repo, Code bleibt privat) für die Server-Jar und die Update-Meldung.
 
 ## Stufe 0 (neu): Spieler, Rechte, Rollen
-- [ ] Rechte-Speicher in PeakCore (`plugins/PeakCore/players.json`, `roles.json`), Rechte werden beim Beitritt und bei Änderung per Bukkit-Berechtigung vergeben
-- [ ] Rechte-Katalog: jedes Modul meldet seine Rechte mit Erklärung an (getrennt je Modul)
-- [ ] Rollen: fertige (Spieler, DJ, Texturen-Team, Admin) plus eigene; Rolle = Rechte-Satz + Web-Teilzugriff
-- [ ] Web-Zugang für Nicht-Operatoren (Rolle mit Web-Recht), Sitzung an IP gebunden, Dauer einstellbar
-- [ ] Reiter "Spieler": Liste (online/offline), Detail mit Rechten je Modul, Limits, Verlauf, Notizen, Sperren/Verwarnen
-- [ ] Alte Rechte (`peaksound.*`) bleiben gültig: Alpha-Kompatibilität; Standard = wie bisher, wenn nichts eingestellt ist
+- [x] Rechte-Speicher in PeakCore (`plugins/PeakCore/players.json`, `roles.json`), Rechte werden beim Beitritt und bei Änderung per Bukkit-Berechtigung vergeben
+- [x] Rechte-Katalog aus den in der plugin.yml angemeldeten Rechten (je Modul getrennt); eigene Anmeldung durch Module noch offen
+- [x] Rollen: fertige (Spieler, DJ, Texturen-Team, Admin) plus eigene; Rolle = Rechte-Satz + Web-Teilzugriff
+- [x] Web-Zugang für Nicht-Operatoren (Rolle mit Web-Recht), Sitzung an IP gebunden, Dauer einstellbar
+- [x] Reiter "Spieler": Liste (online/offline), Detail mit Rechten je Modul, Limits, Verlauf, Notizen, Sperren/Verwarnen
+- [x] Alte Rechte (`peaksound.*`) bleiben gültig: Alpha-Kompatibilität; Standard = wie bisher, wenn nichts eingestellt ist
 
 ## Neues Modul PeakBoard: Scoreboard-Verwaltung (Wunsch des Besitzers, Stufe 7)
 Entscheidungen aus 8 Fragen:

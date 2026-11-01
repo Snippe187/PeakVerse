@@ -5,6 +5,9 @@ api-version: '26.2'
 description: "PeakVerse: Basis (API, Kanal zur Mod) und eingebaute Module (PeakSound, spaeter TexturePeak)."
 softdepend: [voicechat]
 commands:
+  peakweb:
+    description: Link zur PeakVerse-Web-Oberflaeche (fuer Rollen mit Web-Zugang)
+    usage: /peakweb
   peakcore:
     description: Version, Module, Kanal-Status und Spieler mit Mod von PeakCore
     usage: /peakcore <version|modules|status|players>
@@ -61,3 +64,5 @@ libraries:
   - org.jcraft:jorbis:0.0.17
   - org.jflac:jflac-codec:1.5.2
   - net.sourceforge.javaflacencoder:java-flac-encoder:0.3.7
+
+

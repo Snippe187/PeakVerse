@@ -1,4 +1,4 @@
-﻿# PeakVerse 0.1.0 - Anleitung
+# PeakVerse 0.1.0 - Anleitung
 
 ## Dateien (Ordner `dist\`)
 | Datei | Wohin | Wofuer |
@@ -26,6 +26,9 @@ Spieler ohne Mod werden nie gekickt. Sie sehen Texturen ueber das normale Server
 3. Bereiche: **Texturen** (Pixel-Editor, Eintraege, Archiv, Faehigkeiten, Duplizieren, **Standard-Texturen**: Gegenstaende/Bloecke per Vorschaubild waehlen und kopieren oder im Editor aendern), **Pack** (Status, Testmodus, Tester, Freigabe, Zurueckrollen, Basis-Pack hochladen, Dateiliste mit Vorschau), **Bereiche** (Sounds, Texte, Schriften, Partikel, HUD, animierte Texturen, Modelle mit 3D-Vorschau, Himmel, Titelbild), **PeakSound** (alle Songs ansehen, anhoeren, umbenennen, freigeben/ablehnen, loeschen; Speicher und Songlimits pro Spieler; hochgeladen wird weiter im Spiel), **Protokoll**.
 4. Arbeiten zwei Admins gleichzeitig, bekommt der zweite eine Konflikt-Warnung und kann bewusst ueberschreiben.
 5. **Sicherheit:** ohne HTTPS laufen Link und Cookie im Klartext. Fuer das Internet: Reverse-Proxy mit HTTPS davor und `web.public-url` mit `https://`.
+
+## Spieler, Rollen und Rechte (Reiter "Spieler")
+PeakCore verwaltet Rechte selbst: Rollen (fertig: Spieler, DJ, Texturen-Team, Scoreboard, Admin; eigene frei anlegbar) mit Rechten und Web-Zugang, dazu Einzelrechte je Spieler (Erlauben/Vererben/Verbieten, getrennt je Modul), Notizen, Verwarnungen und Sperren (je Modul, nur Web oder alles, mit Ablaufdatum). Wer keinen Eintrag hat, behaelt genau die Rechte, die der Server sonst vergibt (Alpha-Kompatibilitaet). Spieler mit einer Rolle mit Web-Zugang oeffnen die Oberflaeche per /peakweb; sie sehen nur die Seiten ihrer Rolle. Die Spieler-Seite gibt es nur fuer Operatoren und Rollen mit Voll-Zugang (sonst koennte man sich selbst Rechte geben). Sitzungen gelten nur von der IP des Logins (config web.bind-session-ip, hinter einem Proxy auf false) und web.session-hours Stunden. Gespeichert in plugins/PeakCore/roles.json und players.json.
 
 ## Standard-Texturen (Vorschaubilder)
 Die Bilder gehoeren Mojang und liegen nicht im Projekt. Im Web-Editor unter Texturen > Standard-Texturen einmal auf "Jetzt herunterladen" klicken: der Server holt das Client-Jar deiner Spielversion von den offiziellen Mojang-Servern und legt nur die Item- und Block-Bilder in plugins/TexturePeak/vanilla/ ab (braucht Internet auf dem Server). Danach: Bild anklicken > "Kopieren" (neuer Eintrag mit genau dieser Textur) oder "Aendern" (im Pixel-Editor oeffnen).
