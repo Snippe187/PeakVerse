@@ -1,4 +1,4 @@
-# TexturePeak 2: Plan für die neuen Funktionen
+﻿# TexturePeak 2: Plan für die neuen Funktionen
 
 Auswahl des Besitzers (alles gewünscht, Reihenfolge von mir nach Nutzen und Risiko):
 Editor: Ebenen/Auswahl, Formen/Verlauf, Farbwerkzeuge, Animation. Verwaltung: Sammlungen/Tags, Vorschau im Spiel-Look, Versionen, Massen-Import/Export.
@@ -39,3 +39,25 @@ Regeln wie bisher: eine Stufe = ein Commit je Repo, Tests, Testliste, ehrlich ü
 ## Offene Fragen
 - Overlay: Bildschirm-Overlay oder Item-Optik? Auslöser (Regen, Wasser, Fähigkeit)? Nur mit Mod oder auch ohne?
 - Rüstung: nur Aussehen oder auch eigene Werte?
+
+## Entscheidungen aus den 20 Fragen (vom Besitzer)
+- **Reihenfolge:** zuerst Spieler-Reiter und Rechte (Stufe 0), danach Editor, PeakSound-Web, zuletzt Overlay und Rüstung.
+- **Spieler-Reiter (neu, Stufe 0):** Rechte pro Spieler **getrennt je Modul** (PeakCore, PeakSound, TexturePeak), dazu Limits und Zugriff, Verlauf und Notizen, Sperren und Verwarnen (mit Grund und Ablaufdatum). Alles in einem eigenen Reiter, der Spieler verwaltet.
+- **Rechte-System:** eigene Verwaltung in PeakCore (kein LuckPerms nötig), **fertige Rollen plus eigene Rollen** (z. B. Spieler, DJ, Texturen-Team, Admin).
+- **Web-Zugang:** Rollen mit Teilzugriff (z. B. Texturen-Team sieht nur Texturen, DJs nur PeakSound), nicht nur Operatoren. Sitzung zusätzlich **an die IP gebunden**, Sitzungsdauer einstellbar.
+- **Server-Seite:** Spieler online (mit Köpfen), Leistung (TPS, RAM), Konsole, Pack-Auslieferung (wer hat das Pack, wer fehlt).
+- **Meldungen:** Discord-Webhook, im Spiel an Admins, im Browser. **Handy:** egal. **Stil:** Mix (Startseite und Logos pixelig, Verwaltung ruhig und modern). **Ein Server** pro Oberfläche.
+- **PeakSound-Web:** Song-Upload im Browser (mit Umwandlung und Prüfung), Playlists und Radio, Statistiken, Block-Übersicht.
+- **TexturePeak Import:** anderes Resource-Pack öffnen und einzelne Texturen übernehmen, aus großem Bild zuschneiden, Blockbench-Modelle.
+- **Item-Baukasten:** Beschreibung und Farbe, Werte und Verzauberungen, eigene Sounds, Bedingungen (Welt, Biom, Zeit, Permission).
+- **Effekte:** visueller Partikel-Editor mit Vorschau im Browser.
+- **Overlay:** nur mit Mod. Art (Tropfen, Rahmen, Vollbild, animiert) und Auslöser (Item, Wetter, Ort, Befehl) blieben offen ("keine Präferenz"): ich schlage vor, Tropfen/Nässe bei Regen und unter Wasser sowie ein Item-Overlay als Start und lasse Spieler die Stärke abschwächen oder abschalten (Barrierefreiheit).
+- **Updates:** Modrinth für Spieler plus GitHub-Releases (öffentliches Release-Repo, Code bleibt privat) für die Server-Jar und die Update-Meldung.
+
+## Stufe 0 (neu): Spieler, Rechte, Rollen
+- [ ] Rechte-Speicher in PeakCore (`plugins/PeakCore/players.json`, `roles.json`), Rechte werden beim Beitritt und bei Änderung per Bukkit-Berechtigung vergeben
+- [ ] Rechte-Katalog: jedes Modul meldet seine Rechte mit Erklärung an (getrennt je Modul)
+- [ ] Rollen: fertige (Spieler, DJ, Texturen-Team, Admin) plus eigene; Rolle = Rechte-Satz + Web-Teilzugriff
+- [ ] Web-Zugang für Nicht-Operatoren (Rolle mit Web-Recht), Sitzung an IP gebunden, Dauer einstellbar
+- [ ] Reiter "Spieler": Liste (online/offline), Detail mit Rechten je Modul, Limits, Verlauf, Notizen, Sperren/Verwarnen
+- [ ] Alte Rechte (`peaksound.*`) bleiben gültig: Alpha-Kompatibilität; Standard = wie bisher, wenn nichts eingestellt ist
