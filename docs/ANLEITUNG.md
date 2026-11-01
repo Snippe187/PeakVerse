@@ -23,7 +23,7 @@ Spieler ohne Mod werden nie gekickt. Sie sehen Texturen ueber das normale Server
 ## Web-Oberflaeche
 1. Als Operator im Spiel `/peakcore web` (oder die Taste aus dem Steuerungs-Menue, "PeakVerse Web-Oberflaeche oeffnen"), den Link anklicken. In der Konsole: `peakcore web <operator>`.
 2. Der Link gilt 5 Minuten und nur einmal; die Sitzung 8 Stunden und endet sofort nach `/deop`.
-3. Bereiche: **Texturen** (Pixel-Editor, Eintraege, Archiv, Faehigkeiten, Duplizieren, **Standard-Texturen**: Gegenstaende/Bloecke per Vorschaubild waehlen und kopieren oder im Editor aendern), **Pack** (Status, Testmodus, Tester, Freigabe, Zurueckrollen, Basis-Pack hochladen, Dateiliste mit Vorschau), **Bereiche** (Sounds, Texte, Schriften, Partikel, HUD, animierte Texturen, Modelle mit 3D-Vorschau, Himmel, Titelbild), **Protokoll**.
+3. Bereiche: **Texturen** (Pixel-Editor, Eintraege, Archiv, Faehigkeiten, Duplizieren, **Standard-Texturen**: Gegenstaende/Bloecke per Vorschaubild waehlen und kopieren oder im Editor aendern), **Pack** (Status, Testmodus, Tester, Freigabe, Zurueckrollen, Basis-Pack hochladen, Dateiliste mit Vorschau), **Bereiche** (Sounds, Texte, Schriften, Partikel, HUD, animierte Texturen, Modelle mit 3D-Vorschau, Himmel, Titelbild), **PeakSound** (alle Songs ansehen, anhoeren, umbenennen, freigeben/ablehnen, loeschen; Speicher und Songlimits pro Spieler; hochgeladen wird weiter im Spiel), **Protokoll**.
 4. Arbeiten zwei Admins gleichzeitig, bekommt der zweite eine Konflikt-Warnung und kann bewusst ueberschreiben.
 5. **Sicherheit:** ohne HTTPS laufen Link und Cookie im Klartext. Fuer das Internet: Reverse-Proxy mit HTTPS davor und `web.public-url` mit `https://`.
 
@@ -50,4 +50,5 @@ Web: Textur zeichnen oder PNG importieren, Gegenstand (z. B. `DIAMOND_HELMET`) u
 - Kein grafischer Editor fuer Dateien des Basis-Packs; keine Vanilla-Textur-Vorschau.
 - Der Annahme-Dialog fuer Spieler ohne Mod ist nicht getestet. Voice Chat/Upload/Mikrofon im Gesamt-Jar sind nicht neu getestet.
 - Modrinth: Release-Skript `tools\modrinth-release.ps1` (Trockenlauf Standard); die Projekt-IDs in `tools\modrinth.json` sind leer.
+
 
