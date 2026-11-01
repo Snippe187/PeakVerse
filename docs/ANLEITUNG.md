@@ -38,6 +38,11 @@ In der config.yml: update.enabled: true und update.repo (oeffentliches GitHub-Re
 2. .\tools\release.ps1 -Upload legt sie als **Entwurf** im oeffentlichen Repo Snippe187/PeakVerse-Releases an (das Repo muss vorher existieren und oeffentlich sein).
 3. Bei GitHub unter Releases den Entwurf pruefen und **Publish release** klicken. Erst dann sehen die Server das Update in der Web-Oberflaeche. Die Versionsnummer steht in Bundle\gradle.properties.
 
+## Anzeige rechts (PeakBoard)
+Im Web unter Module > PeakBoard > Anzeige. Eine Vorlage waehlen (oder eigene Seiten anlegen), Titel und Zeilen aendern, rechts siehst du sofort die Vorschau; erst mit **Speichern und anwenden** sehen es die Spieler. Farben: &a, &#ff8800, <red>, <gradient:rot:blau>Text</gradient>, <rainbow>; Fett/Kursiv/Unterstrichen mit <b> <i> <u>. Platzhalter wie %kills%, %playtime%, %score:NAME%, %top:NAME:1% stehen als Knoepfe unter dem Editor. Mehrere Seiten wechseln im eingestellten Takt; ein Titel mit mehreren Bildern wird animiert. Jeder Spieler schaltet die Anzeige mit /board fuer sich aus und ein. Eigene Zaehler (Events, Minigames) sind Objectives (Reiter Uebersicht), die du mit %score:NAME% anzeigst und mit /scoreboard players add oder in der Tabelle aenderst.
+
+Grenzen: Jeder Spieler bekommt ein eigenes Scoreboard. Teams, Tab-Liste und die Anzeige unter dem Namen werden uebernommen; was andere Plugins ueber ein eigenes Scoreboard setzen, sieht der Spieler dann nicht, solange die Anzeige an ist. Die Anzeige hoechstens 8 Seiten, 15 Zeilen je Seite.
+
 ## Standard-Texturen (Vorschaubilder)
 Die Bilder gehoeren Mojang und liegen nicht im Projekt. Im Web-Editor unter Texturen > Standard-Texturen einmal auf "Jetzt herunterladen" klicken: der Server holt das Client-Jar deiner Spielversion von den offiziellen Mojang-Servern und legt nur die Item- und Block-Bilder in plugins/TexturePeak/vanilla/ ab (braucht Internet auf dem Server). Danach: Bild anklicken > "Kopieren" (neuer Eintrag mit genau dieser Textur) oder "Aendern" (im Pixel-Editor oeffnen).
 

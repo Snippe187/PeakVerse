@@ -23,7 +23,13 @@ commands:
   peaksoundvote:
     description: Abstimmen, den laufenden Song der Jukebox in deiner Naehe zu ueberspringen
     usage: /peaksoundvote
+  board:
+    description: Die Anzeige rechts (PeakBoard) fuer dich ein- oder ausschalten
+    usage: /board
 permissions:
+  peakboard.toggle:
+    description: Die Anzeige rechts (PeakBoard) fuer sich selbst ein- und ausschalten
+    default: true
   peakcore.admin:
     description: PeakCore-Befehle und Verwaltung
     default: op
