@@ -61,3 +61,14 @@ Regeln wie bisher: eine Stufe = ein Commit je Repo, Tests, Testliste, ehrlich ü
 - [ ] Web-Zugang für Nicht-Operatoren (Rolle mit Web-Recht), Sitzung an IP gebunden, Dauer einstellbar
 - [ ] Reiter "Spieler": Liste (online/offline), Detail mit Rechten je Modul, Limits, Verlauf, Notizen, Sperren/Verwarnen
 - [ ] Alte Rechte (`peaksound.*`) bleiben gültig: Alpha-Kompatibilität; Standard = wie bisher, wenn nichts eingestellt ist
+
+## Neues Modul PeakBoard: Scoreboard-Verwaltung (Wunsch des Besitzers, Stufe 7)
+Entscheidungen aus 8 Fragen:
+- **Platz:** eigenes Modul "PeakBoard" unter Module (ein-/ausschaltbar), eigene Rolle "Scoreboard" im Rechte-System (Stufe 0 muss davor fertig sein).
+- **Verwaltet:** Objectives (anlegen, umbenennen, löschen, Kriterium, Anzeigename, Zahlenformat), Punktestände (setzen, addieren, zurücksetzen), Anzeige-Plätze (Sidebar, unter dem Namen, Tab-Liste), Teams (Farbe, Präfix/Suffix, Mitglieder, Friendly Fire, Namensschild).
+- **Ansicht:** Live-Vorschau der Sidebar wie im Spiel, Tabelle aller Werte (Spieler × Objectives, sortier- und filterbar), Diagramme und Ranglisten, Kachel pro Objective (Name, Kriterium, Einträge, Top 3, schnelle Aktionen).
+- **Änderungen:** als **Entwurf sammeln und veröffentlichen** (gemeinsames Muster mit Stufe 5).
+- **Sidebar im Spiel:** mehrere Seiten im Wechsel, pro Spieler wählbar (oder aus), eigene Zeilen mit Farben und Platzhaltern (Spielername, Ping …). Das braucht eine eigene Sidebar-Anzeige pro Spieler, nicht nur das Vanilla-Scoreboard.
+- **Quellen der Punkte:** Minecraft-Kriterien (kills, deaths, health, level, Statistiken).
+- **Bestand:** vorhandene Objectives/Teams/Werte werden eingelesen und angezeigt, Änderungen an Fremdem erst nach Bestätigung.
+- Offene Punkte, die ich beim Bauen klären muss: Paper-Scoreboard hat pro Spieler ein eigenes Scoreboard nur, wenn wir es setzen; Konflikte mit anderen Plugins, die das Scoreboard besitzen (z. B. Tab-Plugins), sind möglich und werden in der Testliste geprüft.
