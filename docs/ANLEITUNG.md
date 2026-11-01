@@ -33,6 +33,11 @@ PeakCore verwaltet Rechte selbst: Rollen (fertig: Spieler, DJ, Texturen-Team, Sc
 ## Updates
 In der config.yml: update.enabled: true und update.repo (oeffentliches GitHub-Release-Repo, z. B. Snippe187/PeakVerse-Releases). Jedes Release braucht PeakCore-<Version>.jar und PeakCore-<Version>.jar.sha256 (SHA-256-Pruefsumme); ohne Pruefsumme wird nichts installiert. PeakCore prueft alle update.check-hours Stunden und meldet Operatoren im Chat, dass es eine neue Version gibt. Im Web (Server-Seite, nur Operatoren/Voll-Zugang) oder mit /peakcore update check|download|restart <Min.>|cancel: das Jar wird in plugins/update/ gelegt (Paper tauscht es beim naechsten Start aus), auf Wunsch startet der Server mit Countdown im Chat neu (update.restart-mode: restart braucht ein Start-Skript, das den Server wieder hochfaehrt, in der spigot.yml estart-script; stop beendet ihn nur). Ein Reload ohne Neustart gibt es bewusst nicht. Die Mod meldet kein Update selbst: Spieler holen sie ueber Modrinth.
 
+## Eine Version veroeffentlichen
+1. .\tools\release.ps1 baut alles mit Tests und legt die Dateien (Server-Plugin, zwei Mods, Pruefsummen) in dist\release\<Version> ab.
+2. .\tools\release.ps1 -Upload legt sie als **Entwurf** im oeffentlichen Repo Snippe187/PeakVerse-Releases an (das Repo muss vorher existieren und oeffentlich sein).
+3. Bei GitHub unter Releases den Entwurf pruefen und **Publish release** klicken. Erst dann sehen die Server das Update in der Web-Oberflaeche. Die Versionsnummer steht in Bundle\gradle.properties.
+
 ## Standard-Texturen (Vorschaubilder)
 Die Bilder gehoeren Mojang und liegen nicht im Projekt. Im Web-Editor unter Texturen > Standard-Texturen einmal auf "Jetzt herunterladen" klicken: der Server holt das Client-Jar deiner Spielversion von den offiziellen Mojang-Servern und legt nur die Item- und Block-Bilder in plugins/TexturePeak/vanilla/ ab (braucht Internet auf dem Server). Danach: Bild anklicken > "Kopieren" (neuer Eintrag mit genau dieser Textur) oder "Aendern" (im Pixel-Editor oeffnen).
 
