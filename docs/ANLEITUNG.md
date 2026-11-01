@@ -1,4 +1,4 @@
-# PeakVerse 0.1.0 - Anleitung
+﻿# PeakVerse 0.1.0 - Anleitung
 
 ## Dateien (Ordner `dist\`)
 | Datei | Wohin | Wofuer |
@@ -23,9 +23,18 @@ Spieler ohne Mod werden nie gekickt. Sie sehen Texturen ueber das normale Server
 ## Web-Oberflaeche
 1. Als Operator im Spiel `/peakcore web` (oder die Taste aus dem Steuerungs-Menue, "PeakVerse Web-Oberflaeche oeffnen"), den Link anklicken. In der Konsole: `peakcore web <operator>`.
 2. Der Link gilt 5 Minuten und nur einmal; die Sitzung 8 Stunden und endet sofort nach `/deop`.
-3. Bereiche: **Texturen** (Pixel-Editor, Eintraege, Archiv, Faehigkeiten, Duplizieren), **Pack** (Status, Testmodus, Tester, Freigabe, Zurueckrollen, Basis-Pack hochladen, Dateiliste mit Vorschau), **Bereiche** (Sounds, Texte, Schriften, Partikel, HUD, animierte Texturen, Modelle mit 3D-Vorschau, Himmel, Titelbild), **Protokoll**.
+3. Bereiche: **Texturen** (Pixel-Editor, Eintraege, Archiv, Faehigkeiten, Duplizieren, **Standard-Texturen**: Gegenstaende/Bloecke per Vorschaubild waehlen und kopieren oder im Editor aendern), **Pack** (Status, Testmodus, Tester, Freigabe, Zurueckrollen, Basis-Pack hochladen, Dateiliste mit Vorschau), **Bereiche** (Sounds, Texte, Schriften, Partikel, HUD, animierte Texturen, Modelle mit 3D-Vorschau, Himmel, Titelbild), **Protokoll**.
 4. Arbeiten zwei Admins gleichzeitig, bekommt der zweite eine Konflikt-Warnung und kann bewusst ueberschreiben.
 5. **Sicherheit:** ohne HTTPS laufen Link und Cookie im Klartext. Fuer das Internet: Reverse-Proxy mit HTTPS davor und `web.public-url` mit `https://`.
+
+## Standard-Texturen (Vorschaubilder)
+Die Bilder gehoeren Mojang und liegen nicht im Projekt. Im Web-Editor unter Texturen > Standard-Texturen einmal auf "Jetzt herunterladen" klicken: der Server holt das Client-Jar deiner Spielversion von den offiziellen Mojang-Servern und legt nur die Item- und Block-Bilder in plugins/TexturePeak/vanilla/ ab (braucht Internet auf dem Server). Danach: Bild anklicken > "Kopieren" (neuer Eintrag mit genau dieser Textur) oder "Aendern" (im Pixel-Editor oeffnen).
+
+## Neue Texturen ohne Neu-Beitreten
+Mod-Spieler laden ein geaendertes Pack selbst und es wird sofort aktiv (Minecraft laedt die Ressourcen neu). Im Test kam eine geaenderte Textur ohne Neu-Beitreten an; falls etwas fehlt, hilft F3 + T.
+
+## Aussehen der Web-Oberflaeche
+Kopfleiste wie bei minecraft.net, Startseite mit Pixel-Landschaft (Parallaxe beim Scrollen, Wolken ziehen), Tag/Nacht ueber den Schalter oben, Effekte (FX) abschaltbar. Alle Bilder sind selbst gezeichnet, nichts von Mojang.
 
 ## Texturen: Ablauf
 Web: Textur zeichnen oder PNG importieren, Gegenstand (z. B. `DIAMOND_HELMET`) und Namen eintragen. Im Spiel: Gegenstand am Amboss genau so benennen (oder `/texturepeak apply <kennung>` mit dem Gegenstand in der Hand). Mit Testmodus (`Pack` > Testmodus einschalten, Tester eintragen) sehen es erst die Tester; "Test-Pack fuer alle freigeben" macht es oeffentlich.
@@ -41,3 +50,4 @@ Web: Textur zeichnen oder PNG importieren, Gegenstand (z. B. `DIAMOND_HELMET`) u
 - Kein grafischer Editor fuer Dateien des Basis-Packs; keine Vanilla-Textur-Vorschau.
 - Der Annahme-Dialog fuer Spieler ohne Mod ist nicht getestet. Voice Chat/Upload/Mikrofon im Gesamt-Jar sind nicht neu getestet.
 - Modrinth: Release-Skript `tools\modrinth-release.ps1` (Trockenlauf Standard); die Projekt-IDs in `tools\modrinth.json` sind leer.
+
