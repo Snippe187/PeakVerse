@@ -30,3 +30,20 @@ Modul-Kennung `peakachievements`, Datenordner `plugins/PeakAchievements`, im All
 - [ ] **A6 Web, Editor:** Editor mit Vorschau, Icon-Auswahl, Vorlagen (eigene), Ketten, Saison
 - [ ] **A7 Spaß und Start-Reihen:** Seltenheit, Punkte, Server-Meldung, mitgelieferte Achievements
 - [ ] Rolle "Achievements" im Rechte-System, Doku, Testliste, Modrinth-Eintrag
+
+## Weitere Entscheidungen (zweite und dritte Fragerunde)
+- **Seltenheit:** beides: der Admin legt sie fest, zusätzlich zeigt PeakVerse die Quote live in Prozent (wie viele Spieler haben es).
+- **Punkte:** Rangliste, Anzeige im Spiel (Tab-Liste, unter dem Namen, PeakBoard), Belohnungs-Stufen (ab bestimmten Punkten Ränge oder Belohnungen) und Saison-Wertung. **Alles in einem eigenen Abschnitt im Menü einstellbar.**
+- **Zurücksetzen:** vor jedem Zurücksetzen automatische Sicherung der Fortschritte. Zurücksetzen ist möglich, wenn der Besitzer es später entscheidet; es ist pro Saison einstellbar, mit Saison-Rangliste und Abschluss.
+- **Mod-Bildschirm (ersetzt das normale Fortschritts-Fenster):** Die Taste L öffnet einen eigenen Bildschirm mit den Minecraft-Fortschritten und den PeakVerse-Achievements zusammen, schöner und übersichtlicher. Ohne Mod bleibt das normale Fenster. Funktionen: Suche und Filter (offen, erreicht, selten, Kategorie, Saison), Fortschrittsbalken bei Zählern, Anpinnen (kleine Anzeige im Spiel), Details und Tipps (Quote, wer war Erster).
+- **Toast (Meldung oben rechts):** neues Aussehen passend zur Seltenheit (Farben, Rahmen, Animation, größeres Icon), Warteschlange mit einstellbarer Dauer, eigene Sounds und Lautstärke je Seltenheit. Die Vanilla-Toasts von Minecraft bleiben unverändert.
+- **Spieler-Optionen (in der Mod):** Toast-Dauer und Position (oder aus), kompakte Ansicht, Spoiler schonen (geheime Achievements verborgen, bis man sie hat), einzelne Gruppen (Kategorien, Saisons) ausblenden.
+
+## Zusätzliche Stufen
+- [ ] **A8 Mod-Bildschirm:** Paket zwischen Server und Mod (Liste, Fortschritt, Quote, Anpinnen), Bildschirm statt Taste L, Filter, Details; Fallback ohne Mod
+- [ ] **A9 Toast und Anzeige:** Toast-Warteschlange, Seltenheits-Stile, Sounds, Anpin-Anzeige im Spiel, Spieler-Optionen (in der Mod gespeichert)
+- [ ] **A10 Punkte und Saisons:** Einstellungs-Abschnitt, Belohnungs-Stufen, Saison-Wertung, Sicherung vor Reset
+
+## Zusätzliche Risiken
+- Das normale Fortschritts-Fenster ersetzen heißt, in den Bildschirm-Aufruf der Mod einzugreifen (Mixin). Das muss in Minecraft 26.2 geprüft werden und bricht bei Versionswechseln am ehesten. Eigene Toasts sind Mod-Rendering und brauchen Tests im Spiel.
+- Spieler-Einstellungen liegen in der Mod (Konfigurationsdatei des Spielers), nicht auf dem Server.
