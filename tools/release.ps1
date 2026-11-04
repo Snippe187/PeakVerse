@@ -1,4 +1,4 @@
-# Baut eine PeakVerse-Version und legt sie als ENTWURF im oeffentlichen Release-Repo an. Veroeffentlichen (Klick auf "Publish release" bei GitHub) machst du selbst:
+﻿# Baut eine PeakVerse-Version und legt sie als ENTWURF im oeffentlichen Release-Repo an. Veroeffentlichen (Klick auf "Publish release" bei GitHub) machst du selbst:
 # erst dann sehen die Server das Update.
 #
 # Aufruf:  .\tools\release.ps1                      (bauen mit Tests, Dateien in dist\release\<Version> ablegen, nichts hochladen)
@@ -52,9 +52,9 @@ function Get-Section([string]$file, [string]$version) {
     ($res -join "`n").Trim()
 }
 $notes = "# PeakVerse $version`n`n"
-$notes += "Dateien:`n- **PeakCore-$version.jar**: Server-Plugin (Paper, Minecraft 26.2) mit allen Modulen: PeakSound, TexturePeak, PeakBoard`n- **PeakCore-Mod-$version.jar** und **PeakSound-Mod-$version.jar**: Fabric-Mods fuer Spieler (PeakSound braucht PeakCore und die Fabric API)`n- jede Datei mit einer .sha256-Pruefsumme`n`n"
+$notes += "Dateien:`n- **PeakCore-$version.jar**: Server-Plugin (Paper, Minecraft 26.2) mit allen Modulen: PeakSound, TexturePeak, PeakBoard, PeakAchievements`n- **PeakCore-Mod-$version.jar** und **PeakSound-Mod-$version.jar**: Fabric-Mods fuer Spieler (PeakSound braucht PeakCore und die Fabric API)`n- jede Datei mit einer .sha256-Pruefsumme`n`n"
 $notes += "Update auf dem Server: in der PeakCore-config.yml ``update.enabled: true`` setzen; die Web-Oberflaeche zeigt dann diese Version an.`n`n"
-foreach ($m in 'PeakCore', 'PeakSound', 'TexturePeak', 'PeakBoard') {
+foreach ($m in 'PeakCore', 'PeakSound', 'TexturePeak', 'PeakBoard', 'PeakAchievements') {
     $s = Get-Section (Join-Path $root "$m\CHANGELOG.md") $version
     if ($s) { $notes += "## $m`n$s`n`n" }
 }

@@ -1,9 +1,9 @@
-plugins {
+﻿plugins {
     `java-library`
 }
 
 group = "de.peakverse"
-version = "0.1.6"
+version = "0.1.7"
 
 java {
     toolchain.languageVersion = JavaLanguageVersion.of(25)
