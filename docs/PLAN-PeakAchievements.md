@@ -22,9 +22,9 @@ Modul-Kennung `peakachievements`, Datenordner `plugins/PeakAchievements`, im All
 - Befehle als Belohnung laufen mit Konsolen-Rechten: nur für die Rolle mit Voll-Zugang einstellbar und im Web-Protokoll vermerkt.
 
 ## Stufen
-- [ ] **A1 Kern:** Datenmodell (Achievement, Vorlage, Auslöser, Belohnung), Speicher (`achievements.json`, `templates.json`, `progress.json`), Prüfungen und Tests
-- [ ] **A2 Auslöser:** Ereignisse und Zähler, Ereignis-Bus für PeakSound/TexturePeak, Tests mit gespielten Ereignissen
-- [ ] **A3 Anzeige:** Datenpaket schreiben, neu laden, Toast; Test in 26.2 im Spiel
+- [x] **A1 Kern:** Datenmodell (Achievement, Vorlage, Auslöser, Belohnung), Speicher (`achievements.json`, `vanilla.json`, `progress.json`), Prüfungen und Tests (Vorlagen und Ereignis-Bus fehlen noch)
+- [x] **A2 Auslöser (Teil):** töten, abbauen, setzen, craften, angeln, Sprünge, Laufen, Spielzeit, Tode; Ereignis-Bus für PeakSound/TexturePeak fehlt noch
+- [x] **A3 Anzeige:** Fortschritte werden direkt per `UnsafeValues.loadAdvancement` geladen, kein Datenpaket und kein Neuladen nötig. In 26.2 geprüft: Reiter "PeakVerse" erscheint im Fortschritts-Fenster. Offen: Toast-Anblick, Verhalten nach Neustart
 - [ ] **A4 Belohnungen:** Items, XP, Befehle, Titel/Präfix, Effekte, "als Erster", Team-Ziele
 - [ ] **A5 Web, Vanilla:** Fortschritts-Übersicht pro Spieler, vergeben/entziehen, ausblenden, Ranglisten
 - [ ] **A6 Web, Editor:** Editor mit Vorschau, Icon-Auswahl, Vorlagen (eigene), Ketten, Saison
@@ -38,6 +38,18 @@ Modul-Kennung `peakachievements`, Datenordner `plugins/PeakAchievements`, im All
 - **Mod-Bildschirm (ersetzt das normale Fortschritts-Fenster):** Die Taste L öffnet einen eigenen Bildschirm mit den Minecraft-Fortschritten und den PeakVerse-Achievements zusammen, schöner und übersichtlicher. Ohne Mod bleibt das normale Fenster. Funktionen: Suche und Filter (offen, erreicht, selten, Kategorie, Saison), Fortschrittsbalken bei Zählern, Anpinnen (kleine Anzeige im Spiel), Details und Tipps (Quote, wer war Erster).
 - **Toast (Meldung oben rechts):** neues Aussehen passend zur Seltenheit (Farben, Rahmen, Animation, größeres Icon), Warteschlange mit einstellbarer Dauer, eigene Sounds und Lautstärke je Seltenheit. Die Vanilla-Toasts von Minecraft bleiben unverändert.
 - **Spieler-Optionen (in der Mod):** Toast-Dauer und Position (oder aus), kompakte Ansicht, Spoiler schonen (geheime Achievements verborgen, bis man sie hat), einzelne Gruppen (Kategorien, Saisons) ausblenden.
+
+## Entscheidungen (vierte Fragerunde, 2026-11-04)
+- **Ein großer Skill Tree** statt fünf Reiter: alle Minecraft-Fortschritte und eigene Achievements in einem Baum. Umsetzung als eigener Mod-Bildschirm (A8); der Baum ist komplett eigen aufgebaut (Themen-Äste), die Vanilla-Äste sind Zutaten.
+- **Der Owner kann alles anpassen:** eigene Achievements und Minecraft-Fortschritte ein-/ausschalten, im Baum verschieben/neu verbinden, Texte und Symbol überschreiben, Punkte und Belohnungen festlegen (`vanilla.json`).
+- **Sichtbarkeit pro Fortschritt einstellbar:** immer / nach Elternteil / verborgen bis erreicht.
+- **Verwaltung:** Web-Oberfläche (Baum-Editor) und im Spiel (Bearbeiten-Modus im Skill-Tree-Bildschirm), dazu Befehle und Dateien.
+- **Erste Version:** echte Fortschritte (Reiter bei Taste L, Toast), Auslöser töten/abbauen/setzen/craften/angeln/Zähler/Spielzeit, Anlegen per Datei und Befehl, Belohnungen XP/Items/Befehle/Effekte.
+- Paper kann Fortschritte direkt laden (`UnsafeValues.loadAdvancement`); ob ohne Datenpaket-Neuladen geht, wird in 26.2 getestet.
+
+## Zwei Modi (fünfte Fragerunde)
+- **`mode: vanilla`:** alles aus, Minecraft-Fortschritte bleiben unverändert und lassen sich nicht ändern; kein Reiter, keine eigenen Achievements, keine Sperren. **`mode: peak`:** alle Features. Der Owner stellt es für den ganzen Server ein (config.yml oder `/peakachievements mode <peak|vanilla>`).
+- Wechsel im Betrieb: Peak aktiviert sofort; Vanilla stoppt Auslöser und Sperren sofort, der Reiter verschwindet sicher erst nach einem Neustart (Paper gibt entfernte Fortschritte verzögert frei). Ein Neustart im Vanilla-Modus lädt nichts davon (getestet).
 
 ## Zusätzliche Stufen
 - [ ] **A8 Mod-Bildschirm:** Paket zwischen Server und Mod (Liste, Fortschritt, Quote, Anpinnen), Bildschirm statt Taste L, Filter, Details; Fallback ohne Mod

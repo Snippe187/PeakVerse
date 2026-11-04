@@ -1,0 +1,14 @@
+# PeakAchievements
+# Modus fuer den ganzen Server:
+#   peak    = alle PeakVerse-Features (eigene Achievements, Reiter im Fortschritts-Fenster, Minecraft-Fortschritte anpassbar)
+#   vanilla = alles aus, Minecraft-Fortschritte bleiben genau wie sie sind und lassen sich nicht aendern
+# Wechseln im Spiel: /peakachievements mode <peak|vanilla>
+mode: peak
+# Beispiel-Achievements beim allerersten Start anlegen (danach beliebig aendern oder loeschen)
+examples: true
+# Meldung im Chat, wenn jemand ein Achievement erreicht (der Toast oben rechts kommt immer)
+announce-to-chat: true
+# Name und Beschreibung des Reiters im Fortschritts-Fenster (Taste L)
+tab:
+  title: "PeakVerse"
+  description: "Eigene Achievements dieses Servers"

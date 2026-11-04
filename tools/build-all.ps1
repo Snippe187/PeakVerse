@@ -14,6 +14,7 @@ $modules = @(
     @{ Name = 'PeakSound'; Mod = 'fabric-mod\build\libs' },
     @{ Name = 'TexturePeak' },
     @{ Name = 'PeakBoard' },
+    @{ Name = 'PeakAchievements' },
     @{ Name = 'Bundle';    Plugin = 'build\libs'; Dist = 'PeakCore'; JarPrefix = 'PeakCore' }   # zuletzt: braucht die Module
 )
 

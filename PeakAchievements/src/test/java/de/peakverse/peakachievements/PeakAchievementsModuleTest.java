@@ -1,0 +1,36 @@
+package de.peakverse.peakachievements;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import de.peakverse.core.api.ModuleInfo;
+import de.peakverse.core.api.module.PeakModule;
+import java.util.ServiceLoader;
+import org.junit.jupiter.api.Test;
+
+/** Schuetzt die Grundregeln eines Moduls: gueltige ID, ServiceLoader-Eintrag, Standard-Config im Jar. Weitere Tests des Moduls hier ergaenzen. */
+class PeakAchievementsModuleTest {
+    @Test
+    void idIsValidForPeakCore() {
+        PeakAchievementsModule module = new PeakAchievementsModule();
+        new ModuleInfo(module.id(), module.displayName(), "0.1.0", 1); // wirft bei ungueltiger ID
+    }
+
+    @Test
+    void isFoundByTheServiceLoader() {
+        boolean found = ServiceLoader.load(PeakModule.class).stream().anyMatch(p -> p.type() == PeakAchievementsModule.class);
+        assertTrue(found, "META-INF/services/de.peakverse.core.api.module.PeakModule fehlt oder nennt die Klasse nicht");
+    }
+
+    @Test
+    void defaultConfigIsAtTheModulePath() {
+        assertNotNull(getClass().getResource("/modules/" + new PeakAchievementsModule().id() + "/config.yml"));
+    }
+
+    @Test
+    void disableWithoutEnableIsSafe() {
+        new PeakAchievementsModule().disable();
+        assertEquals("peakachievements", new PeakAchievementsModule().id());
+    }
+}

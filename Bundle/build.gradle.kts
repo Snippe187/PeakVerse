@@ -20,6 +20,7 @@ dependencies {
     implementation("de.peaksound:paper-plugin")
     implementation("de.peakverse:texturepeak")
     implementation("de.peakverse:peakboard")
+    implementation("de.peakverse:peakachievements")
 
     testImplementation("org.yaml:snakeyaml:2.4")
     testImplementation(platform("org.junit:junit-bom:5.11.4"))

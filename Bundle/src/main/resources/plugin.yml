@@ -20,6 +20,10 @@ commands:
     description: TexturePeak verwalten (Texturen-Regeln, Archiv, Pack)
     usage: /texturepeak <list|add|remove|archive|restore|apply|check|reload>
     permission: peakcore.admin
+  peakachievements:
+    description: Achievements ansehen und verwalten
+    usage: /peakachievements <me|list|info|give|revoke|enable|disable|add|remove|reload>
+    aliases: [ach]
   peaksoundvote:
     description: Abstimmen, den laufenden Song der Jukebox in deiner Naehe zu ueberspringen
     usage: /peaksoundvote
