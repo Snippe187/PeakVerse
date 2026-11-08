@@ -10,12 +10,19 @@
 param(
     [string]$Repo = 'Snippe187/PeakVerse-Releases',
     [switch]$Upload,
-    [switch]$SkipBuild
+    [switch]$SkipBuild,
+    [string]$Beta = ''
 )
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 $version = ((Get-Content (Join-Path $root 'Bundle\gradle.properties') | Where-Object { $_ -match '^bundle_version=' }) -split '=')[1].Trim()
 if ($version -notmatch '^\d+\.\d+\.\d+([-.][0-9A-Za-z.]+)?$') { throw "Ungueltige Version '$version' in Bundle\gradle.properties" }
+$base = $version
+if ($Beta) {
+    if ($Beta -notmatch '^\d+\.\d+\.\d+-beta\.\d+$') { throw "Beta-Version muss wie 0.1.8-beta.1 aussehen (nicht '$Beta')." }
+    if ($SkipBuild) { throw '-Beta braucht einen frischen Bau (ohne -SkipBuild), damit die Version in den Dateien stimmt.' }
+    $version = $Beta
+}
 $out = Join-Path $root "dist\release\$version"
 
 # Fuer eine Beta werden die Versionsnummern nur fuers Bauen getauscht und danach wieder zurueckgesetzt
