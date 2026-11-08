@@ -3,7 +3,7 @@
 export default async function mount(root, ctx) {
   const { h, t } = ctx;
   const L = (de, en) => t({ de, en });
-  const NODE = 56, GAPX = 96, GAPY = 74;
+  const NODE = 46, SPACING = 62, GAP = 84;
   let st = null, meta = null, sel = null, search = '', view = { x: 40, y: 40, k: 1 }, drag = null;
   const iconCache = {};
 
@@ -19,40 +19,97 @@ export default async function mount(root, ctx) {
   }
   const byKey = () => new Map(st.nodes.map(n => [n.key, n]));
 
-  // ---------- Layout: waagerechter Baum ----------
+  // ---------- Layout: Mindmap (PeakVerse in der Mitte, die Aeste strahlen nach aussen) ----------
+  const BRANCH_COLORS = { 'minecraft:story/': '#6fbf4a', 'minecraft:nether/': '#e0524a', 'minecraft:end/': '#b58cff', 'minecraft:adventure/': '#f0a030', 'minecraft:husbandry/': '#d6d94a' };
+  const OWN_COLOR = '#4cd8e8';
   function layout() {
     const nodes = st.nodes, map = byKey(), kids = new Map();
     const parentOf = n => (n.parent && map.has(n.parent)) ? n.parent : '';
     for (const n of nodes) { const p = parentOf(n); if (!kids.has(p)) kids.set(p, []); kids.get(p).push(n); }
-    for (const l of kids.values()) l.sort((a, b) => (a.kind === b.kind ? 0 : a.kind === 'vanilla' ? -1 : 1) || a.title.localeCompare(b.title));
-    const pos = new Map(); let row = 0;
-    // virtuelle Wurzel "PeakVerse"
-    const place = (n, depth) => {
-      const list = kids.get(n.key) || [];
-      if (!list.length) { pos.set(n.key, { x: depth, y: row++ }); return; }
-      const ys = list.map(c => { place(c, depth + 1); return pos.get(c.key).y; });
-      pos.set(n.key, { x: depth, y: (Math.min(...ys) + Math.max(...ys)) / 2 });
+    for (const l of kids.values()) l.sort((a, b) => (a.kind === b.kind ? 0 : a.kind === 'vanilla' ? -1 : 1) || a.key.localeCompare(b.key));
+    const weight = new Map();
+    const count = n => {
+      const l = kids.get(n.key) || [];
+      const c = l.length ? l.reduce((s, x) => s + count(x), 0) : 1;
+      weight.set(n.key, Math.max(c, 2.2)); return weight.get(n.key); // auch ein einzelner Knoten bekommt genug Winkel
     };
     const tops = kids.get('') || [];
-    const topYs = tops.map(c => { place(c, 1); return pos.get(c.key).y; });
-    pos.set('', { x: 0, y: topYs.length ? (Math.min(...topYs) + Math.max(...topYs)) / 2 : 0 });
-    return { pos, rows: row, kids };
-  }
-
-  // ---------- Symbole ----------
-  function icon(name, size = 32) {
-    const img = h('img', { class: 'pa-ic', width: size, height: size, alt: '', draggable: 'false' });
-    const tries = ['item', 'block'];
-    let i = 0;
-    const next = () => {
-      if (iconCache[name] === false || i >= tries.length) { img.replaceWith(h('span', { class: 'pa-ic ph', style: 'width:' + size + 'px;height:' + size + 'px;line-height:' + size + 'px' }, (name || '?')[0].toUpperCase())); return; }
-      img.src = '/api/texturepeak/vanilla/' + tries[i++] + '/' + encodeURIComponent(name);
+    const total = tops.reduce((s, x) => s + count(x), 0) || 1;
+    // 1) Winkel: jeder Knoten liegt in der Mitte seines Abschnitts
+    const ang = new Map(), depthOf = new Map(), branch = new Map(), topOf = new Map(), byDepth = [];
+    const place = (n, depth, a0, a1, br, top) => {
+      ang.set(n.key, (a0 + a1) / 2); depthOf.set(n.key, depth); branch.set(n.key, br); topOf.set(n.key, top);
+      const l = kids.get(n.key) || []; const sum = l.reduce((s, x) => s + weight.get(x.key), 0); let a = a0;
+      for (const ch of l) { const w = (a1 - a0) * weight.get(ch.key) / sum; place(ch, depth + 1, a, a + w, br, top); a += w; }
     };
-    img.onerror = () => { if (i >= tries.length) iconCache[name] = false; next(); };
-    next();
+    let a = -Math.PI / 2;
+    for (const t of tops) {
+      const w = 2 * Math.PI * weight.get(t.key) / total;
+      const col = t.kind === 'custom' ? OWN_COLOR : (Object.entries(BRANCH_COLORS).find(([k]) => t.key.startsWith(k))?.[1] || '#9aa4b8');
+      place(t, 1, a, a + w, col, t.key); a += w;
+    }
+    // 2) Radien: der erste Ring ist gemeinsam, danach bekommt jeder Ast seine eigenen Abstaende (kleine Aeste bleiben kompakt).
+    //    Ist ein Ring zu eng, wird jeder zweite Knoten nach aussen versetzt.
+    const STAGGER = 70, extra = new Map(), radiusOf = new Map(); // Knoten -> Radius
+    const sep = (list, step) => {
+      const angles = list.map(k => ang.get(k)).sort((x, y) => x - y);
+      let m = Infinity;
+      for (let i = 0; i < angles.length; i++) {
+        let d = (angles[(i + step) % angles.length] - angles[i]) * (angles.length > step ? 1 : 0);
+        if (d <= 0) d += 2 * Math.PI;
+        m = Math.min(m, d);
+      }
+      return Math.max(m, 0.012);
+    };
+    const ring = (list, startOuter, first) => {
+      const base = startOuter + (first ? 150 : 74);
+      const rPlain = Math.max(base, list.length > 1 ? SPACING / sep(list, 1) : 0);
+      let r = rPlain, stag = false;
+      if (list.length > 2 && rPlain > base * 1.3) {
+        const rStag = Math.max(base, SPACING / sep(list, 2));
+        if (rStag < rPlain) { r = rStag; stag = true; }
+      }
+      const sorted = [...list].sort((x, y) => ang.get(x) - ang.get(y));
+      sorted.forEach((k, i) => { radiusOf.set(k, r); if (stag && i % 2) extra.set(k, STAGGER); });
+      return r + (stag ? STAGGER : 0);
+    };
+    const level1 = tops.map(t => t.key);
+    const outer1 = ring(level1, 0, true);
+    const perTop = new Map();
+    for (const [k, d] of depthOf) {
+      if (d < 2) continue;
+      const g = perTop.get(topOf.get(k)) || perTop.set(topOf.get(k), []).get(topOf.get(k));
+      (g[d] ||= []).push(k);
+    }
+    for (const levels of perTop.values()) {
+      let prev = outer1;
+      for (let d = 2; d < levels.length; d++) if (levels[d]) prev = ring(levels[d], prev, false);
+    }
+    const pos = new Map([['', { x: 0, y: 0 }]]);
+    for (const [k, an] of ang) { const r = (radiusOf.get(k) || 0) + (extra.get(k) || 0); pos.set(k, { x: Math.cos(an) * r, y: Math.sin(an) * r }); }    // 3) Rest-Ueberlappungen: die weiter aussen liegende Kachel rueckt radial nach aussen
+    const keys = [...pos.keys()].filter(k => k !== '');
+    for (let round = 0; round < 40; round++) {
+      let moved = false;
+      for (let i = 0; i < keys.length; i++) for (let j = i + 1; j < keys.length; j++) {
+        const pa = pos.get(keys[i]), pb = pos.get(keys[j]);
+        if (Math.abs(pa.x - pb.x) < NODE + 4 && Math.abs(pa.y - pb.y) < NODE + 4) {
+          const far = Math.hypot(pa.x, pa.y) > Math.hypot(pb.x, pb.y) ? pa : pb, rr = Math.hypot(far.x, far.y) || 1;
+          far.x += far.x / rr * 16; far.y += far.y / rr * 16; moved = true;
+        }
+      }
+      if (!moved) break;
+    }
+    return { pos, kids, branch };
+  }
+  // ---------- Symbole ----------
+  let textures = null; // Namen der vorhandenen Standard-Texturen (TexturePeak), damit nur existierende Bilder angefragt werden
+  function icon(name, size = 32) {
+    const kind = textures ? (textures.item.has(name) ? 'item' : textures.block.has(name) ? 'block' : null) : 'item';
+    if (!kind) return h('span', { class: 'pa-ic ph', style: 'width:' + size + 'px;height:' + size + 'px;line-height:' + size + 'px' }, (name || '?')[0].toUpperCase());
+    const img = h('img', { class: 'pa-ic', width: size, height: size, alt: '', draggable: 'false', src: '/api/texturepeak/vanilla/' + kind + '/' + encodeURIComponent(name) });
+    img.onerror = () => img.replaceWith(h('span', { class: 'pa-ic ph', style: 'width:' + size + 'px;height:' + size + 'px;line-height:' + size + 'px' }, (name || '?')[0].toUpperCase()));
     return img;
   }
-
   // ---------- Zeichnen ----------
   const treeEl = h('div', { class: 'pa-tree' });
   const sideEl = h('div', { class: 'pa-side' });
@@ -71,7 +128,7 @@ export default async function mount(root, ctx) {
   function drawBar() {
     const q = h('input', { placeholder: L('Suchen...', 'Search...'), value: search, class: 'grow', oninput: e => { search = e.target.value; drawTree(); } });
     barEl.replaceChildren(q,
-      h('button', { class: 'px-btn small', onclick: () => { view = { x: 40, y: 40, k: 1 }; applyView(); } }, L('Ansicht zuruecksetzen', 'Reset view')),
+      h('button', { class: 'px-btn small', onclick: fit }, L('Alles zeigen', 'Show all')),
       h('button', { class: 'px-btn small', disabled: st.mode !== 'peak', onclick: newCustom }, '+ ' + L('Eigenes Achievement', 'Custom achievement')),
       st.draft ? h('span', { class: 'tag warn' }, L('Entwurf: noch nicht live', 'Draft: not live yet')) : h('span', { class: 'tag good' }, L('Live-Stand', 'Live')),
       h('button', { class: 'px-btn small primary', disabled: !st.draft, onclick: async () => { if (await ctx.confirm(L('Entwurf veroeffentlichen? Der Baum wird fuer alle Spieler neu geladen (mit Sicherung der alten Dateien).', 'Publish the draft? The tree is reloaded for all players (old files are backed up).'))) send('publish', '', L('Veroeffentlicht', 'Published')); } }, L('Veroeffentlichen', 'Publish')),
@@ -80,43 +137,68 @@ export default async function mount(root, ctx) {
 
   function applyView() { const c = treeEl.querySelector('.pa-canvas'); if (c) c.style.transform = `translate(${view.x}px,${view.y}px) scale(${view.k})`; }
 
+  let bbox = { w: 1, h: 1 };
+  /** Zeigt den ganzen Baum im Fenster. */
+  function fit() {
+    const w = treeEl.clientWidth || 800, h = treeEl.clientHeight || 500;
+    const k = Math.min(1.4, Math.max(0.12, Math.min(w / bbox.w, h / bbox.h) * 0.95));
+    view = { k, x: (w - bbox.w * k) / 2, y: (h - bbox.h * k) / 2 }; applyView();
+  }
+  function zoomBy(f) {
+    const w = treeEl.clientWidth / 2, h = treeEl.clientHeight / 2, k = Math.min(2.5, Math.max(0.1, view.k * f));
+    view.x = w - (w - view.x) * (k / view.k); view.y = h - (h - view.y) * (k / view.k); view.k = k; applyView();
+  }
+
+  let firstDraw = true;
   function drawTree() {
-    const { pos, rows, kids } = layout();
+    const { pos, kids, branch } = layout();
     const map = byKey();
-    const W = (Math.max(...[...pos.values()].map(p => p.x)) + 1) * GAPX + NODE + 40, H = Math.max(1, rows) * GAPY + NODE + 40;
-    const px = p => p.x * GAPX, py = p => p.y * GAPY;
+    const half = NODE / 2 + 24;
+    const xs = [...pos.values()].map(p => p.x), ys = [...pos.values()].map(p => p.y);
+    const minX = Math.min(...xs) - half, minY = Math.min(...ys) - half;
+    const W = Math.max(...xs) - minX + half, H = Math.max(...ys) - minY + half;
+    bbox = { w: W, h: H };
+    const cx = p => p.x - minX, cy = p => p.y - minY; // Mittelpunkt der Kachel in der Flaeche
     const ql = search.trim().toLowerCase();
     const hit = n => !ql || n.title.toLowerCase().includes(ql) || n.description.toLowerCase().includes(ql) || n.key.toLowerCase().includes(ql);
+    const onPath = new Set(); // Weg der Auswahl bis zur Mitte
+    for (let k = sel; k !== undefined && k !== ''; k = (map.get(k)?.parent && map.has(map.get(k).parent)) ? map.get(k).parent : '') { onPath.add(k); if (!map.get(k)) break; }
     const svgNS = 'http://www.w3.org/2000/svg';
     const svg = document.createElementNS(svgNS, 'svg'); svg.setAttribute('width', W); svg.setAttribute('height', H); svg.setAttribute('class', 'pa-lines');
-    const line = (a, b, dim) => {
-      const x1 = px(a) + NODE, y1 = py(a) + NODE / 2, x2 = px(b), y2 = py(b) + NODE / 2, mx = (x1 + x2) / 2;
-      const p = document.createElementNS(svgNS, 'path'); p.setAttribute('d', `M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`); p.setAttribute('class', 'pa-line' + (dim ? ' dim' : '')); svg.append(p);
-    };
-    const els = [];
+    for (const [pk, list] of kids) for (const c of list) {
+      const a = pos.get(pk), b = pos.get(c.key);
+      const l = document.createElementNS(svgNS, 'line');
+      l.setAttribute('x1', cx(a)); l.setAttribute('y1', cy(a)); l.setAttribute('x2', cx(b)); l.setAttribute('y2', cy(b));
+      const hot = onPath.has(c.key);
+      l.setAttribute('stroke', hot ? '#ffffff' : (branch.get(c.key) || '#9aa4b8'));
+      l.setAttribute('class', 'pa-line' + (c.enabled ? '' : ' dim') + (hot ? ' hot' : ''));
+      svg.append(l);
+    }
     const rootNode = { key: '', title: 'PeakVerse', icon: 'nether_star', frame: 'challenge', enabled: true, kind: 'root', description: '' };
-    for (const [pk, list] of kids) for (const c of list) line(pos.get(pk), pos.get(c.key), !c.enabled);
+    const els = [];
     for (const n of [rootNode, ...st.nodes]) {
       const p = pos.get(n.key); if (!p) continue;
+      const size = n.kind === 'root' ? NODE + 18 : NODE;
+      const col = n.kind === 'root' ? '#7aa2ff' : (branch.get(n.key) || '#9aa4b8');
       const el = h('div', { class: 'pa-node ' + n.frame + (n.enabled ? '' : ' off') + (sel === n.key ? ' sel' : '') + (n.kind === 'custom' ? ' own' : '') + (n.kind === 'root' ? ' rootn' : '') + (n.changed ? ' chg' : '') + (hit(n) ? '' : ' dim'),
-        style: `left:${px(p)}px;top:${py(p)}px;width:${NODE}px;height:${NODE}px`, 'data-key': n.key, title: n.title + (n.description ? '\n' + n.description : '') }, icon(n.icon, 32));
+        style: `left:${cx(p) - size / 2}px;top:${cy(p) - size / 2}px;width:${size}px;height:${size}px;--bc:${col}`, 'data-key': n.key, title: n.title + (n.description ? '\n' + n.description : '') }, icon(n.icon, n.kind === 'root' ? 40 : 30));
       if (n.kind !== 'root') el.addEventListener('pointerdown', e => startDrag(e, n, el));
       els.push(el);
     }
-    const canvas = h('div', { class: 'pa-canvas', style: `width:${W}px;height:${H}px` }, svg, ...els);
-    treeEl.replaceChildren(canvas);
-    applyView();
+    treeEl.replaceChildren(h('div', { class: 'pa-canvas', style: `width:${W}px;height:${H}px` }, svg, ...els),
+      h('div', { class: 'pa-zoom' }, h('button', { class: 'px-btn small', title: L('Hineinzoomen', 'Zoom in'), onclick: () => zoomBy(1.25) }, '+'), h('button', { class: 'px-btn small', title: L('Herauszoomen', 'Zoom out'), onclick: () => zoomBy(0.8) }, '−'), h('button', { class: 'px-btn small', title: L('Alles zeigen', 'Show all'), onclick: fit }, '⤢')));
+    if (firstDraw) { firstDraw = false; requestAnimationFrame(fit); } else applyView();
   }
-
   // ---------- Ziehen (Knoten umhaengen) und Schieben/Zoomen der Flaeche ----------
   treeEl.addEventListener('wheel', e => {
     e.preventDefault();
     const r = treeEl.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top;
-    const k = Math.min(2.2, Math.max(0.35, view.k * (e.deltaY < 0 ? 1.1 : 0.9)));
+    const k = Math.min(2.5, Math.max(0.1, view.k * Math.exp(-e.deltaY * 0.0015)));
     view.x = mx - (mx - view.x) * (k / view.k); view.y = my - (my - view.y) * (k / view.k); view.k = k; applyView();
   }, { passive: false });
+  treeEl.addEventListener('dblclick', e => { if (!e.target.closest('.pa-node, .pa-zoom')) fit(); });
   treeEl.addEventListener('pointerdown', e => {
-    if (e.target.closest('.pa-node')) return;
+    if (e.target.closest('.pa-node, .pa-zoom')) return;
     const sx = e.clientX, sy = e.clientY, ox = view.x, oy = view.y;
     treeEl.setPointerCapture(e.pointerId); treeEl.classList.add('pan');
     const move = ev => { view.x = ox + ev.clientX - sx; view.y = oy + ev.clientY - sy; applyView(); };
@@ -231,23 +313,23 @@ export default async function mount(root, ctx) {
 .pa-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:10px 0}
 .pa-main{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:14px}
 @media(max-width:900px){.pa-main{grid-template-columns:1fr}}
-.pa-tree{position:relative;height:68vh;min-height:360px;overflow:hidden;border:2px solid var(--line);background:radial-gradient(circle at 20% 20%,var(--panel2),var(--panel));cursor:grab;touch-action:none}
+.pa-zoom{position:absolute;right:10px;bottom:10px;display:flex;gap:6px;z-index:3}.pa-tree{position:relative;height:72vh;min-height:420px;overflow:hidden;border:2px solid var(--line);background:radial-gradient(circle at 20% 20%,var(--panel2),var(--panel));cursor:grab;touch-action:none}
 .pa-tree.pan{cursor:grabbing}
 .pa-canvas{position:absolute;left:0;top:0;transform-origin:0 0}
 .pa-lines{position:absolute;left:0;top:0;pointer-events:none}
-.pa-line{fill:none;stroke:var(--dim);stroke-width:3;opacity:.7}.pa-line.dim{opacity:.25;stroke-dasharray:5 5}
-.pa-node{position:absolute;display:flex;align-items:center;justify-content:center;box-sizing:border-box;background:#6b6b6b;border:3px solid #a9a9a9;cursor:pointer;user-select:none;transition:transform .12s,box-shadow .12s}
+.pa-line{stroke-width:3;opacity:.55;stroke-linecap:square}.pa-line.dim{opacity:.2;stroke-dasharray:5 5}.pa-line.hot{stroke-width:4;opacity:1}
+.pa-node{position:absolute;display:flex;align-items:center;justify-content:center;box-sizing:border-box;background:#4a4a4a;border:3px solid var(--bc,#a9a9a9);cursor:pointer;user-select:none;transition:transform .12s,box-shadow .12s}
 .pa-node.static{position:relative;flex:none}
 .pa-node:hover{transform:translateY(-2px);box-shadow:0 4px 0 rgba(0,0,0,.35)}
 .pa-node.task{border-radius:4px}
-.pa-node.goal{border-radius:26px;border-color:#e0b64a;background:#7a6a3c}
-.pa-node.challenge{border-radius:6px;border-color:#b45bd6;background:#5b3a73;clip-path:polygon(25% 0,75% 0,100% 25%,100% 75%,75% 100%,25% 100%,0 75%,0 25%)}
+.pa-node.goal{border-radius:22px;background:#5f5330}
+.pa-node.challenge{border-radius:6px;background:#4a2f5e;clip-path:polygon(22% 0,78% 0,100% 22%,100% 78%,78% 100%,22% 100%,0 78%,0 22%)}
 .pa-node.own{box-shadow:0 0 0 3px var(--accent)}
 .pa-node.off{opacity:.4;filter:grayscale(.8)}
 .pa-node.dim{opacity:.15}
 .pa-node.chg::after{content:'';position:absolute;right:-3px;top:-3px;width:10px;height:10px;border-radius:50%;background:#ffb020;border:2px solid #000}
 .pa-node.sel{outline:3px solid #fff;outline-offset:2px}
-.pa-node.rootn{border-color:#7aa2ff;background:#34466e;cursor:default}
+.pa-node.rootn{background:#34466e;cursor:default;box-shadow:0 0 18px #7aa2ff88}
 .pa-node.drop{outline:3px dashed var(--good);outline-offset:3px;transform:scale(1.08)}
 .pa-node.lifted{opacity:.35}
 .pa-node.ghost{position:fixed;z-index:9999;pointer-events:none;opacity:.9;transform:scale(1.1)}
@@ -266,5 +348,6 @@ export default async function mount(root, ctx) {
 
   ctx.on(async d => { if (d.module === 'peakachievements') { try { st = await ctx.api('state'); } catch { return; } render(); } });
   try { meta = await ctx.api('meta'); } catch { meta = null; }
+  try { const v = await fetch('/api/texturepeak/vanilla', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null); if (v && v.ready) textures = { item: new Set(v.item), block: new Set(v.block) }; } catch { textures = null; }
   await reload();
 }
