@@ -4,7 +4,7 @@ export default async function mount(root, ctx) {
   const { h, t } = ctx;
   const L = (de, en) => t({ de, en });
   const NODE = 46, SPACING = 62, GAP = 84;
-  let st = null, meta = null, sel = null, search = '', view = { x: 40, y: 40, k: 1 }, drag = null;
+  let tab = 'minecraft', st = null, meta = null, sel = null, search = '', view = { x: 40, y: 40, k: 1 }, drag = null;
   const iconCache = {};
 
   const FRAMES = { task: L('Aufgabe', 'Task'), goal: L('Ziel', 'Goal'), challenge: L('Herausforderung', 'Challenge') };
@@ -18,12 +18,14 @@ export default async function mount(root, ctx) {
     catch (e) { if (e.message) ctx.toast(e.message, 'bad'); return false; }
   }
   const byKey = () => new Map(st.nodes.map(n => [n.key, n]));
+  /** Die Knoten des gerade gezeigten Baums: Minecraft oder Eigene. */
+  const shown = () => st.nodes.filter(n => tab === 'own' ? n.kind === 'custom' : n.kind === 'vanilla');
 
   // ---------- Layout: Mindmap (PeakVerse in der Mitte, die Aeste strahlen nach aussen) ----------
   const BRANCH_COLORS = { 'minecraft:story/': '#6fbf4a', 'minecraft:nether/': '#e0524a', 'minecraft:end/': '#b58cff', 'minecraft:adventure/': '#f0a030', 'minecraft:husbandry/': '#d6d94a' };
   const OWN_COLOR = '#4cd8e8';
-  function layout() {
-    const nodes = st.nodes, map = byKey(), kids = new Map();
+  function layout(nodes) {
+    const map = new Map(nodes.map(n => [n.key, n])), kids = new Map();
     const parentOf = n => (n.parent && map.has(n.parent)) ? n.parent : '';
     for (const n of nodes) { const p = parentOf(n); if (!kids.has(p)) kids.set(p, []); kids.get(p).push(n); }
     for (const l of kids.values()) l.sort((a, b) => (a.kind === b.kind ? 0 : a.kind === 'vanilla' ? -1 : 1) || a.key.localeCompare(b.key));
@@ -101,6 +103,150 @@ export default async function mount(root, ctx) {
     }
     return { pos, kids, branch };
   }
+  // ---------- Linien: sanfte Kurven, die um Kacheln herumfuehren und sich moeglichst nicht kreuzen ----------
+  const PAD = 10;
+  const halfOf = k => (k === '' ? NODE + 18 : NODE) / 2;
+  /** Wo die Strecke p->q in das Quadrat c +- h eintritt (0..1) oder null. */
+  function segEnter(p, q, c, h) {
+    let t0 = 0, t1 = 1; const dx = q.x - p.x, dy = q.y - p.y;
+    const clip = (pp, qq) => { if (pp === 0) return qq >= 0; const r = qq / pp; if (pp < 0) { if (r > t1) return false; if (r > t0) t0 = r; } else { if (r < t0) return false; if (r < t1) t1 = r; } return true; };
+    return clip(-dx, p.x - (c.x - h)) && clip(dx, (c.x + h) - p.x) && clip(-dy, p.y - (c.y - h)) && clip(dy, (c.y + h) - p.y) && t0 <= t1 ? t0 : null;
+  }
+  /** Catmull-Rom durch die Punkte -> Bezier-Stuecke [p1, c1, c2, p2]. */
+  function curveSegs(pts) {
+    const out = [];
+    for (let i = 0; i < pts.length - 1; i++) {
+      const p0 = pts[i - 1] || pts[i], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2] || pts[i + 1];
+      out.push([p1, { x: p1.x + (p2.x - p0.x) / 6, y: p1.y + (p2.y - p0.y) / 6 }, { x: p2.x - (p3.x - p1.x) / 6, y: p2.y - (p3.y - p1.y) / 6 }, p2]);
+    }
+    return out;
+  }
+  function sampleCurve(pts, per = 8) {
+    const out = [pts[0]];
+    for (const [a, b, c, d] of curveSegs(pts)) for (let i = 1; i <= per; i++) {
+      const t = i / per, u = 1 - t;
+      out.push({ x: u * u * u * a.x + 3 * u * u * t * b.x + 3 * u * t * t * c.x + t * t * t * d.x, y: u * u * u * a.y + 3 * u * u * t * b.y + 3 * u * t * t * c.y + t * t * t * d.y });
+    }
+    return out;
+  }
+  function curveD(pts, ox, oy) {
+    const f = v => Math.round(v * 10) / 10;
+    return 'M' + f(pts[0].x + ox) + ' ' + f(pts[0].y + oy) + curveSegs(pts).map(([, b, c, d]) => ' C' + f(b.x + ox) + ' ' + f(b.y + oy) + ' ' + f(c.x + ox) + ' ' + f(c.y + oy) + ' ' + f(d.x + ox) + ' ' + f(d.y + oy)).join('');
+  }
+  /**
+   * Linie a->b: gerade, wenn nichts im Weg steht; sonst der kuerzeste Weg um die Kachelecken herum (Sichtbarkeitsgraph).
+   * ban: Ecken, die nicht benutzt werden duerfen (so entsteht der Weg auf der anderen Seite).
+   */
+  function route(aKey, bKey, pos, boxes, ban, extra) {
+    const A = pos.get(aKey), B = pos.get(bKey);
+    const dx = B.x - A.x, dy = B.y - A.y, len2 = dx * dx + dy * dy || 1;
+    const inf = bx => bx.h + PAD + extra;
+    const obs = boxes.filter(bx => {
+      if (bx.key === aKey || bx.key === bKey) return false;
+      const t = Math.max(0, Math.min(1, ((bx.c.x - A.x) * dx + (bx.c.y - A.y) * dy) / len2));
+      return Math.hypot(A.x + dx * t - bx.c.x, A.y + dy * t - bx.c.y) < 280;
+    });
+    const blocked = (p, q) => obs.some(bx => segEnter(p, q, bx.c, inf(bx) - 0.6) !== null);
+    if (!blocked(A, B)) return { pts: [A, B], hits: new Set(), ids: [] };
+    const nodes = [{ p: A, id: 'A' }, { p: B, id: 'B' }];
+    for (const bx of obs) {
+      const hh = inf(bx);
+      for (const [sx, sy] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) {
+        const id = bx.key + '|' + sx + sy;
+        if (ban && ban.has(id)) continue;
+        const p = { x: bx.c.x + sx * hh, y: bx.c.y + sy * hh };
+        if (obs.some(o => o !== bx && Math.abs(p.x - o.c.x) < inf(o) - 0.6 && Math.abs(p.y - o.c.y) < inf(o) - 0.6)) continue; // Ecke liegt in einer anderen Kachel
+        nodes.push({ p, id, box: bx.key });
+      }
+    }
+    const n = nodes.length, dist = new Array(n).fill(Infinity), prev = new Array(n).fill(-1), done = new Array(n).fill(false);
+    dist[0] = 0;
+    for (let it = 0; it < n; it++) {
+      let u = -1;
+      for (let i = 0; i < n; i++) if (!done[i] && (u < 0 || dist[i] < dist[u])) u = i;
+      if (u < 0 || dist[u] === Infinity) break;
+      done[u] = true; if (u === 1) break;
+      for (let v = 0; v < n; v++) {
+        if (done[v]) continue;
+        const d = dist[u] + Math.hypot(nodes[u].p.x - nodes[v].p.x, nodes[u].p.y - nodes[v].p.y);
+        if (d < dist[v] && !blocked(nodes[u].p, nodes[v].p)) { dist[v] = d; prev[v] = u; }
+      }
+    }
+    if (prev[1] < 0) return { pts: [A, B], hits: new Set(), ids: [], failed: true }; // kein Weg gefunden: bleibt gerade
+    const path = [];
+    for (let i = 1; i !== -1; i = prev[i]) path.unshift(nodes[i]);
+    const mid = [];
+    for (const x of path.slice(1, -1)) { const last = mid.length ? mid[mid.length - 1].p : A; if (Math.hypot(x.p.x - last.x, x.p.y - last.y) >= 16) mid.push(x); }
+    path.splice(1, path.length - 2, ...mid);
+    return { pts: path.map(x => x.p), hits: new Set(mid.map(x => x.box)), ids: mid.map(x => x.id) };
+  }  const clearOf = (samples, boxes, aKey, bKey) => !samples.some((s, i) => i > 0 && boxes.some(bx => bx.key !== aKey && bx.key !== bKey && Math.abs(s.x - bx.c.x) < bx.h + 3 && Math.abs(s.y - bx.c.y) < bx.h + 3));
+  /** Route plus Pruefung der geglaetteten Kurve; bleibt sie an einer Kachel haengen, wird der Abstand schrittweise vergroessert. */
+  function routeChecked(aKey, bKey, pos, boxes, ban) {
+    let r;
+    for (const extra of [0, 10, 22, 36]) {
+      r = route(aKey, bKey, pos, boxes, ban, extra);
+      r.samples = sampleCurve(r.pts);
+      if (clearOf(r.samples, boxes, aKey, bKey)) break;
+    }
+    return r;
+  }
+  const segCross = (p, q, r, s) => {
+    const d = (q.x - p.x) * (s.y - r.y) - (q.y - p.y) * (s.x - r.x);
+    if (d === 0) return false;
+    const t = ((r.x - p.x) * (s.y - r.y) - (r.y - p.y) * (s.x - r.x)) / d, u = ((r.x - p.x) * (q.y - p.y) - (r.y - p.y) * (q.x - p.x)) / d;
+    return t > 0.001 && t < 0.999 && u > 0.001 && u < 0.999;
+  };
+  function bounds(smp) { let a = 1e9, b = 1e9, c = -1e9, d = -1e9; for (const s of smp) { a = Math.min(a, s.x); b = Math.min(b, s.y); c = Math.max(c, s.x); d = Math.max(d, s.y); } return { a, b, c, d }; }
+  function crossings(e, edges) {
+    let n = 0;
+    for (const o of edges) {
+      if (o === e || o.a === e.a || o.a === e.b || o.b === e.a || o.b === e.b) continue; // Linien, die sich an einer Kachel treffen, kreuzen sich nicht
+      const A = e.bb, B = o.bb; if (A.c < B.a || B.c < A.a || A.d < B.b || B.d < A.b) continue;
+      let hit = false;
+      for (let i = 0; i < e.samples.length - 1 && !hit; i++) for (let j = 0; j < o.samples.length - 1; j++) if (segCross(e.samples[i], e.samples[i + 1], o.samples[j], o.samples[j + 1])) { hit = true; break; }
+      if (hit) n++;
+    }
+    return n;
+  }
+  /** Alle Linien des Baums: Kurven um Kacheln herum; bei Kreuzungen wird, wo moeglich, auf der anderen Seite vorbeigefuehrt. */
+  function routeAll(kids, pos) {
+    const boxes = [...pos].map(([key, c]) => ({ key, c, h: halfOf(key) }));
+    const edges = [];
+    for (const [pk, list] of kids) for (const ch of list) {
+      const r = routeChecked(pk, ch.key, pos, boxes, null);
+      edges.push({ a: pk, b: ch.key, pts: r.pts, samples: r.samples, hits: r.hits, ids: r.ids, bb: bounds(r.samples) });
+    }
+    // Kreuzungen verringern: eine Linie oder ihr Kreuzungspartner wird, wenn sie einen Umweg hat, auf der anderen Seite vorbeigefuehrt (nur wenn es insgesamt besser wird)
+    const alts = e => { // andere Wege: alle benutzten Ecken sperren, nur die erste oder nur die letzte
+      if (!e.hits.size) return [];
+      const out = [];
+      for (const ban of [e.ids, e.ids.slice(0, 1)]) {
+        const r = routeChecked(e.a, e.b, pos, boxes, new Set(ban));
+        out.push({ pts: r.pts, samples: r.samples, bb: bounds(r.samples), hits: r.hits, ids: r.ids });
+      }
+      return out;
+    };    const partners = e => edges.filter(o => o !== e && crossings({ ...e, samples: e.samples, bb: e.bb }, [e, o]) > 0);
+    for (let pass = 0; pass < 3; pass++) {
+      let improved = false;
+      for (const e of edges) {
+        const now = crossings(e, edges);
+        if (now === 0) continue;
+        for (const who of [e, ...partners(e)]) {
+          const before = crossings(e, edges) + (who === e ? 0 : crossings(who, edges));
+          const old = { pts: who.pts, samples: who.samples, bb: who.bb, hits: who.hits, ids: who.ids };
+          let best = null, bestAfter = before;
+          for (const cand of alts(who)) {
+            Object.assign(who, cand);
+            const after = crossings(e, edges) + (who === e ? 0 : crossings(who, edges));
+            if (after < bestAfter) { bestAfter = after; best = cand; }
+          }
+          if (best) { Object.assign(who, best); improved = true; break; }
+          Object.assign(who, old);
+        }
+      }
+      if (!improved) break;
+    }    return { edges, boxes, crossings: edges.reduce((s, e) => s + crossings(e, edges), 0) / 2 };
+  }
   // ---------- Symbole ----------
   let textures = null; // Namen der vorhandenen Standard-Texturen (TexturePeak), damit nur existierende Bilder angefragt werden
   function icon(name, size = 32) {
@@ -127,7 +273,9 @@ export default async function mount(root, ctx) {
 
   function drawBar() {
     const q = h('input', { placeholder: L('Suchen...', 'Search...'), value: search, class: 'grow', oninput: e => { search = e.target.value; drawTree(); } });
-    barEl.replaceChildren(q,
+    const count = k => st.nodes.filter(n => n.kind === k).length;
+    const tabBtn = (id, label, n) => h('button', { class: 'px-btn small' + (tab === id ? ' active' : ''), onclick: () => { if (tab === id) return; tab = id; sel = null; firstDraw = true; render(); } }, label + ' (' + n + ')');
+    barEl.replaceChildren(tabBtn('minecraft', 'Minecraft', count('vanilla')), tabBtn('own', L('Eigene', 'Own'), count('custom')), q,
       h('button', { class: 'px-btn small', onclick: fit }, L('Alles zeigen', 'Show all')),
       h('button', { class: 'px-btn small', disabled: st.mode !== 'peak', onclick: newCustom }, '+ ' + L('Eigenes Achievement', 'Custom achievement')),
       st.draft ? h('span', { class: 'tag warn' }, L('Entwurf: noch nicht live', 'Draft: not live yet')) : h('span', { class: 'tag good' }, L('Live-Stand', 'Live')),
@@ -149,9 +297,10 @@ export default async function mount(root, ctx) {
     view.x = w - (w - view.x) * (k / view.k); view.y = h - (h - view.y) * (k / view.k); view.k = k; applyView();
   }
 
-  let firstDraw = true;
+  let firstDraw = true, treeCtx = null, routeCache = { sig: '', net: null };
   function drawTree() {
-    const { pos, kids, branch } = layout();
+    const nodes = shown();
+    const { pos, kids, branch } = layout(nodes);
     const map = byKey();
     const half = NODE / 2 + 24;
     const xs = [...pos.values()].map(p => p.x), ys = [...pos.values()].map(p => p.y);
@@ -165,18 +314,22 @@ export default async function mount(root, ctx) {
     for (let k = sel; k !== undefined && k !== ''; k = (map.get(k)?.parent && map.has(map.get(k).parent)) ? map.get(k).parent : '') { onPath.add(k); if (!map.get(k)) break; }
     const svgNS = 'http://www.w3.org/2000/svg';
     const svg = document.createElementNS(svgNS, 'svg'); svg.setAttribute('width', W); svg.setAttribute('height', H); svg.setAttribute('class', 'pa-lines');
-    for (const [pk, list] of kids) for (const c of list) {
-      const a = pos.get(pk), b = pos.get(c.key);
-      const l = document.createElementNS(svgNS, 'line');
-      l.setAttribute('x1', cx(a)); l.setAttribute('y1', cy(a)); l.setAttribute('x2', cx(b)); l.setAttribute('y2', cy(b));
-      const hot = onPath.has(c.key);
-      l.setAttribute('stroke', hot ? '#ffffff' : (branch.get(c.key) || '#9aa4b8'));
-      l.setAttribute('class', 'pa-line' + (c.enabled ? '' : ' dim') + (hot ? ' hot' : ''));
-      svg.append(l);
+    const sig = tab + '|' + nodes.map(n => n.key + '>' + n.parent).join(',');
+    const net = routeCache.sig === sig ? routeCache.net : (routeCache = { sig, net: routeAll(kids, pos) }).net;
+    const edgeEls = new Map();
+    for (const e of net.edges) {
+      const c = map.get(e.b), l = document.createElementNS(svgNS, 'path');
+      l.setAttribute('d', curveD(e.pts, -minX, -minY)); l.setAttribute('fill', 'none');
+      const hot = onPath.has(e.b);
+      l.setAttribute('stroke', hot ? '#ffffff' : (branch.get(e.b) || '#9aa4b8'));
+      l.setAttribute('class', 'pa-line' + (c && !c.enabled ? ' dim' : '') + (hot ? ' hot' : ''));
+      svg.append(l); edgeEls.set(e.b, l);
     }
-    const rootNode = { key: '', title: 'PeakVerse', icon: 'nether_star', frame: 'challenge', enabled: true, kind: 'root', description: '' };
+    const preview = document.createElementNS(svgNS, 'path'); preview.setAttribute('class', 'pa-preview'); preview.setAttribute('fill', 'none'); svg.append(preview);
+    treeCtx = { pos, boxes: net.boxes, edgeEls, preview, ox: -minX, oy: -minY };
+    const rootNode = tab === 'own' ? { key: '', title: L('Eigene Achievements', 'Own achievements'), icon: 'nether_star', frame: 'challenge', enabled: true, kind: 'root', description: '' } : { key: '', title: 'Minecraft', icon: 'grass_block', frame: 'challenge', enabled: true, kind: 'root', description: '' };
     const els = [];
-    for (const n of [rootNode, ...st.nodes]) {
+    for (const n of [rootNode, ...nodes]) {
       const p = pos.get(n.key); if (!p) continue;
       const size = n.kind === 'root' ? NODE + 18 : NODE;
       const col = n.kind === 'root' ? '#7aa2ff' : (branch.get(n.key) || '#9aa4b8');
@@ -185,8 +338,8 @@ export default async function mount(root, ctx) {
       if (n.kind !== 'root') el.addEventListener('pointerdown', e => startDrag(e, n, el));
       els.push(el);
     }
-    treeEl.replaceChildren(h('div', { class: 'pa-canvas', style: `width:${W}px;height:${H}px` }, svg, ...els),
-      h('div', { class: 'pa-zoom' }, h('button', { class: 'px-btn small', title: L('Hineinzoomen', 'Zoom in'), onclick: () => zoomBy(1.25) }, '+'), h('button', { class: 'px-btn small', title: L('Herauszoomen', 'Zoom out'), onclick: () => zoomBy(0.8) }, '−'), h('button', { class: 'px-btn small', title: L('Alles zeigen', 'Show all'), onclick: fit }, '⤢')));
+    treeEl.replaceChildren(...[h('div', { class: 'pa-canvas', style: `width:${W}px;height:${H}px` }, svg, ...els), !nodes.length ? h('div', { class: 'pa-empty' }, L('Noch keine eigenen Achievements. Mit dem Knopf oben ein neues anlegen.', 'No own achievements yet. Create one with the button above.')) : null,
+      h('div', { class: 'pa-zoom' }, h('button', { class: 'px-btn small', title: L('Hineinzoomen', 'Zoom in'), onclick: () => zoomBy(1.25) }, '+'), h('button', { class: 'px-btn small', title: L('Herauszoomen', 'Zoom out'), onclick: () => zoomBy(0.8) }, '−'), h('button', { class: 'px-btn small', title: L('Alles zeigen', 'Show all'), onclick: fit }, '⤢'))].filter(Boolean));
     if (firstDraw) { firstDraw = false; requestAnimationFrame(fit); } else applyView();
   }
   // ---------- Ziehen (Knoten umhaengen) und Schieben/Zoomen der Flaeche ----------
@@ -206,6 +359,17 @@ export default async function mount(root, ctx) {
     treeEl.addEventListener('pointermove', move); treeEl.addEventListener('pointerup', up);
   });
 
+  /** Beim Ziehen: zeigt live, wie die Linie zum gerade angepeilten neuen Knoten verlaufen wuerde (um Kacheln herum). */
+  function previewLine(childKey, targetKey) {
+    if (!treeCtx) return;
+    const { pos, boxes, edgeEls, preview, ox, oy } = treeCtx;
+    const own = edgeEls.get(childKey);
+    if (own) own.classList.toggle('faded', targetKey !== null);
+    if (targetKey === null || !pos.has(targetKey) || !pos.has(childKey)) { preview.setAttribute('d', ''); return; }
+    const r = routeChecked(targetKey, childKey, pos, boxes, null);
+    preview.setAttribute('d', curveD(r.pts, ox, oy));
+  }
+
   function startDrag(e, n, el) {
     e.preventDefault(); e.stopPropagation();
     const sx = e.clientX, sy = e.clientY; let ghost = null, over = null, moved = false;
@@ -218,9 +382,11 @@ export default async function mount(root, ctx) {
       if (over && over !== target) over.classList.remove('drop');
       over = target && target !== el ? target : null;
       if (over) over.classList.add('drop');
+      previewLine(n.key, over ? over.dataset.key : null);
     };
     const up = async () => {
       document.removeEventListener('pointermove', move); document.removeEventListener('pointerup', up);
+      previewLine(n.key, null);
       if (ghost) ghost.remove(); el.classList.remove('lifted'); if (over) over.classList.remove('drop');
       if (!moved) { sel = n.key; render(); return; }
       if (over) await send('parent', { key: n.key, parent: over.dataset.key }, L('Umgehaengt (im Entwurf)', 'Re-attached (in draft)'));
@@ -300,9 +466,10 @@ export default async function mount(root, ctx) {
   }
 
   async function newCustom() {
+    tab = 'own'; firstDraw = true;
     const id = (prompt(L('Kennung des neuen Achievements (a-z, 0-9, _):', 'ID of the new achievement (a-z, 0-9, _):')) || '').trim().toLowerCase();
     if (!id) return;
-    const a = { id, title: id, description: '', icon: 'STONE', frame: 'TASK', enabled: true, hidden: false, category: 'allgemein', parent: sel && st.nodes.find(x => x.key === sel) ? sel : '', points: 10, visibility: 'AFTER_PARENT', type: 'MANUAL', target: '', count: 1, rewards: { xp: 0, items: [], commands: [], title: '', firework: false, sound: '' } };
+    const a = { id, title: id, description: '', icon: 'STONE', frame: 'TASK', enabled: true, hidden: false, category: 'allgemein', parent: sel && st.nodes.find(x => x.key === sel && x.kind === 'custom') ? sel : '', points: 10, visibility: 'AFTER_PARENT', type: 'MANUAL', target: '', count: 1, rewards: { xp: 0, items: [], commands: [], title: '', firework: false, sound: '' } };
     if (await send('custom', a, L('Angelegt (Entwurf)', 'Created (draft)'))) { sel = id; render(); }
   }
 
@@ -313,11 +480,11 @@ export default async function mount(root, ctx) {
 .pa-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:10px 0}
 .pa-main{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:14px}
 @media(max-width:900px){.pa-main{grid-template-columns:1fr}}
-.pa-zoom{position:absolute;right:10px;bottom:10px;display:flex;gap:6px;z-index:3}.pa-tree{position:relative;height:72vh;min-height:420px;overflow:hidden;border:2px solid var(--line);background:radial-gradient(circle at 20% 20%,var(--panel2),var(--panel));cursor:grab;touch-action:none}
+.pa-empty{position:absolute;left:50%;top:62%;transform:translateX(-50%);color:var(--dim);text-align:center;max-width:320px;pointer-events:none}.pa-zoom{position:absolute;right:10px;bottom:10px;display:flex;gap:6px;z-index:3}.pa-tree{position:relative;height:72vh;min-height:420px;overflow:hidden;border:2px solid var(--line);background:radial-gradient(circle at 20% 20%,var(--panel2),var(--panel));cursor:grab;touch-action:none}
 .pa-tree.pan{cursor:grabbing}
 .pa-canvas{position:absolute;left:0;top:0;transform-origin:0 0}
 .pa-lines{position:absolute;left:0;top:0;pointer-events:none}
-.pa-line{stroke-width:3;opacity:.55;stroke-linecap:square}.pa-line.dim{opacity:.2;stroke-dasharray:5 5}.pa-line.hot{stroke-width:4;opacity:1}
+.pa-line{stroke-width:3;opacity:.55;stroke-linecap:square}.pa-line.dim{opacity:.2;stroke-dasharray:5 5}.pa-line.hot{stroke-width:4;opacity:1}.pa-line.faded{opacity:.12}.pa-preview{stroke:#fff;stroke-width:4;stroke-dasharray:8 6;opacity:.95;pointer-events:none}
 .pa-node{position:absolute;display:flex;align-items:center;justify-content:center;box-sizing:border-box;background:#4a4a4a;border:3px solid var(--bc,#a9a9a9);cursor:pointer;user-select:none;transition:transform .12s,box-shadow .12s}
 .pa-node.static{position:relative;flex:none}
 .pa-node:hover{transform:translateY(-2px);box-shadow:0 4px 0 rgba(0,0,0,.35)}
