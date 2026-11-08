@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.8
+- Neues Modul: eigene Achievements als echte Minecraft-Fortschritte (eigener Reiter "PeakVerse" bei Taste L, Toast, funktioniert ohne Mod). Ausloeser: Mobs toeten, Bloecke abbauen/setzen, craften, angeln, Spruenge, Laufen, Spielzeit, Tode, manuell. Belohnungen: XP, Items, Konsolen-Befehle, Titel, Sound, Feuerwerk.
+- Zwei Modi fuer den ganzen Server: `peak` (alle Features) und `vanilla` (alles aus, Minecraft unveraendert). Umschalten mit `/peakachievements mode <peak|vanilla>` oder in der config.yml. Wechsel auf vanilla im Betrieb stoppt Ausloeser sofort, der Reiter verschwindet sicher erst nach einem Neustart.
+- Alle Minecraft-Fortschritte erscheinen als stille Kopien im Reiter PeakVerse (erreicht, sobald das Original erreicht ist; Minecraft bleibt die Quelle, auch nach `/advancement revoke`). Schalter `mirror-vanilla` in der config.yml.
+- Neue Web-Seite **Achievements** (Module -> Achievements): zwei Mindmap-Baeume (Minecraft und Eigene) mit eckigen Minecraft-Kacheln, Linien als sanfte Kurven um Kacheln herum, Zoom und Alles zeigen. Minecraft-Fortschritte und eigene Achievements bearbeiten, per Ziehen umhaengen (mit Live-Vorschau der Linie), Entwurf mit Veroeffentlichen und Sicherung (`backups/`), Vorschau als Kachel und Toast. Konsolen-Befehle als Belohnung darf nur ein Operator setzen.
+- Befehl `/peakachievements` (`/ach`): me, list, info, give, revoke, enable, disable, add, remove, reload, mode. 8 Beispiel-Achievements beim ersten Start.
+
 ## 0.1.8-beta.1
 - Alle Minecraft-Fortschritte erscheinen als stille Kopien im Reiter PeakVerse (erreicht, sobald das Original erreicht ist; Minecraft bleibt die Quelle, die Kopie folgt auch nach /advancement revoke). Schalter `mirror-vanilla` in der config.yml.
 - Neue Web-Seite **Achievements** (Module -> Achievements): Skill-Tree aller Knoten, Minecraft-Fortschritte und eigene Achievements bearbeiten, per Ziehen umhaengen, Entwurf mit Veroeffentlichen und Sicherung (`backups/`), Vorschau als Kachel und Toast. Die Spieler-Verwaltung folgt.
