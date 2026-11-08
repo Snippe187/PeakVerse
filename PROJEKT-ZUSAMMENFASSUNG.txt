@@ -1,0 +1,149 @@
+PEAKVERSE - ZUSAMMENFASSUNG DES GESAMTEN PROJEKTS
+Stand: 8. November 2026, Version 0.1.7
+===========================================================
+
+1. WAS IST PEAKVERSE?
+---------------------
+PeakVerse ist eine Sammlung aus Server-Plugin und Fabric-Mods fuer Minecraft 26.2.
+Auf dem Server liegt EIN einziges Plugin-Jar (PeakCore-<Version>.jar, fuer Paper).
+Darin stecken alle Module, jedes einzeln in der config.yml ein- und ausschaltbar.
+Spieler brauchen die Mods nur fuer Zusatzfunktionen (Surround-Sound, Pack-Laden,
+Web-Tunnel). Spieler ohne Mod werden nie gekickt.
+Lizenz: GPL-3.0. Veroeffentlichung ueber das Repo Snippe187/PeakVerse-Releases.
+
+
+2. AUFBAU (Ordner in C:\Users\neowi\Desktop\PeakVerse)
+-------------------------------------------------------
+PeakCore/         Basis: Plugin + Core-Mod, Kanal zur Mod, Modul-Lader, Pack-Dienst,
+                  Web-Oberflaeche, Rechte-System, Update-Funktion, oeffentliche API
+PeakSound/        Musik-Modul + eigene Client-Mod
+TexturePeak/      Texturen-Modul (Items nach Namen, Faehigkeiten, Web-Editor)
+PeakBoard/        Scoreboard-Verwaltung in der Weboberflaeche
+PeakAchievements/ NEU in 0.1.7: eigene Achievements als echte Minecraft-Fortschritte
+Bundle/           baut aus Core und Modulen das All-in-one-Plugin-Jar
+ModuleTemplate/   Vorlage fuer neue Module (docs/NEUES_MODUL.md)
+PeakStats/        Statistik-Modul (spaeter geplant)
+ServerPackKeeper/ kleines Zusatzprojekt (spaeter)
+tools/            Skripte: build-all.ps1, release.ps1, new-module.ps1
+run/              gemeinsamer Test-Server (Paper 26.2)
+docs/             ANLEITUNG, ARCHITEKTUR, PLAN, NEUES_MODUL, PLAN-TexturePeak-2,
+                  PLAN-PeakAchievements
+dist/             gebaute Dateien (Plugin, Mods, Release-Ordner)
+_archiv/          Originalstaende, nicht bearbeiten
+
+Jedes Modul ist ein eigenes Gradle-Projekt mit eigenem Git-Repository, eigener
+Version und eigenem Changelog. Module kennen nur die oeffentliche API von
+PeakCore, nie einander. GitHub (Snippe187): PeakCore, PeakSound, TexturePeak,
+PeakBoard, PeakVerse (Hauptrepo, enthaelt auch Bundle, PeakAchievements, tools,
+docs), PeakVerse-Releases (oeffentlich, nur Downloads).
+
+
+3. PEAKCORE (Basis)
+-------------------
+- Kanal zwischen Server und Mod (Protokoll mit Handshake, Admin-Status).
+- Modul-Lader: Module melden sich per ServiceLoader an (PeakModule).
+- Resource-Pack-Dienst: baut das Server-Pack aus den Beitraegen der Module,
+  eigener Webserver (Standard Port 8123), Hash, Versand an Spieler, Testmodus,
+  Versionen mit Zurueckrollen, Pack-Bibliothek (mehrere Packs, eines aktiv).
+  Spieler MIT Mod laden das Pack selbst (pack.public-url), Spieler OHNE Mod
+  bekommen den normalen Annahme-Dialog von Minecraft.
+- Web-Oberflaeche fuer Admins: Anmeldung per Einmal-Link (/peakcore web oder
+  /peakweb), Geraete koppeln, Rollen und Rechte, Protokoll aller Aenderungen,
+  Live-Aktualisierung, Konflikt-Warnung, Sprachen DE/EN/FR/ES.
+  Reiter: Start, Server, Module, Spieler, Fehler, Protokoll.
+- Web-Tunnel: die Mod oeffnet die Web-Oberflaeche im Browser ueber die
+  Minecraft-Verbindung (Taste oder /peakcoreweb), ohne offenen Port.
+- Spieler-Verwaltung und Rechte-System mit Rollen (Web-Teilzugriff je Modul).
+- Update-Funktion: Server prueft Releases, /peakcore update check, Neustart
+  planbar, Mod-Updater auf dem Client.
+- Neu in 0.1.7:
+  * Reiter "Fehler" in der Weboberflaeche: Warnungen/Fehler aller PeakVerse-Module
+    und Pack-Probleme der Spieler, gleiche Meldungen gruppiert (Anzahl, zuletzt,
+    Spieler), Filter, Details, "Erledigt", "Alles leeren" (Datei errors.json).
+  * Die Mod meldet dem Server, wenn sie das Pack nicht laden kann (z. B.
+    ConnectException); neues Paket PackReport (max. 10 Meldungen je Spieler).
+
+
+4. PEAKSOUND (Musik)
+--------------------
+Eigene Musik auf Schallplatten brennen (MP3/FLAC/WAV/OGG, bis 4 Minuten) und
+in 3D bis 7.1.4-Surround abspielen: PeakSound-Jukebox mit Menue und Playlist,
+Redstone-Verbund, Comparator-Equalizer, Lautsprecher mit Kanal und Bauart,
+DJ-Pult mit Crossfader, Scheinwerfer, optional Mikrofon (Simple Voice Chat),
+Radio. Web-Seite zum Hochladen. Client-Mod fuer den Raumklang.
+
+
+5. TEXTUREPEAK
+--------------
+Texturen-Modul: Items nach Namen, Faehigkeiten, Pixel-Editor und Datei-Upload
+in der Weboberflaeche, Beitraege zum Server-Pack (siehe docs/PLAN-TexturePeak-2).
+
+
+6. PEAKBOARD
+------------
+Scoreboard (Objectives, Punktestaende, Anzeige-Plaetze, Teams) in der
+Weboberflaeche verwalten. Aenderungen als Entwurf sammeln und mit einem Klick
+veroeffentlichen; was PeakBoard nicht selbst angelegt hat, ist geschuetzt;
+Sicherung vor jedem Veroeffentlichen (plugins/PeakBoard/backups).
+
+
+7. PEAKACHIEVEMENTS (neu, Grundstock fertig)
+--------------------------------------------
+Eigene Achievements als echte Minecraft-Fortschritte (Ausloeser
+minecraft:impossible, vergeben vom Modul): eigener Reiter "PeakVerse" bei
+Taste L, Toast oben rechts, funktioniert ohne Mod.
+- Ausloeser: Mobs toeten, Bloecke abbauen/setzen, craften, angeln, Spruenge,
+  Laufen, Spielzeit, Tode, manuell vergeben.
+- Belohnungen: XP, Items, Konsolen-Befehle (nur Admin), Titel, Sound, Feuerwerk.
+- Zwei Modi fuer den ganzen Server (config.yml "mode" oder
+  /peakachievements mode <peak|vanilla>):
+    peak    = alle Features
+    vanilla = alles aus, Minecraft-Fortschritte bleiben unveraendert
+  Wechsel auf vanilla im Betrieb: Ausloeser stoppen sofort, der Reiter
+  verschwindet sicher erst nach einem Serverneustart.
+- Befehl /peakachievements (Alias /ach): me, list, info, give, revoke, enable,
+  disable, add, remove, reload, mode. 8 Beispiel-Achievements beim ersten Start.
+- Daten: achievements.json, vanilla.json, progress.json (atomar gespeichert,
+  kaputte Dateien als .kaputt beiseitegelegt).
+- Geplant (siehe docs/PLAN-PeakAchievements.md): ein grosser Skill-Tree statt
+  5 Reitern als eigener Mod-Bildschirm (Owner kann Minecraft-Fortschritte und
+  eigene ein-/ausschalten, verschieben, Texte/Symbol/Punkte/Belohnung aendern,
+  Sichtbarkeit je Fortschritt), Web-Editor, Seltenheit/Punkte/Saisons,
+  Ereignis-Bus fuer PeakSound/TexturePeak, Rolle "Achievements".
+
+
+8. BAUEN, TESTEN, RELEASEN
+--------------------------
+  tools\build-all.ps1               alles bauen (mit Tests)
+  tools\build-all.ps1 -Install -SkipTests   bauen und in run\server\plugins kopieren
+  tools\release.ps1                 Release-Dateien in dist\release\<Version>
+  tools\release.ps1 -Upload         zusaetzlich als ENTWURF zu GitHub; Freigeben
+                                    ("Publish release") machst du selbst
+Release-Dateien: PeakCore-<V>.jar (Server), PeakCore-Mod-<V>.jar,
+PeakSound-Mod-<V>.jar, je eine .sha256.
+Aktuelle Version 0.1.7: Entwurf liegt bei Snippe187/PeakVerse-Releases,
+noch NICHT freigegeben. Vorherige veroeffentlichte Version: 0.1.6.
+Test-Server: run\server (Paper 26.2); Dev-Client: PeakSound\gradlew.bat
+:fabric-mod:runClient.
+
+
+9. STAND UND OFFENE PUNKTE
+--------------------------
+- Auf dem Haupt-Server kommt "Das Server-Resource-Pack konnte nicht geladen
+  werden: ConnectException": die Mod erreicht die Pack-Adresse nicht
+  (pack.public-url / pack.web.port, Port von aussen zu?). Auf dem Testserver
+  tritt es nicht auf. Dafuer werden gebraucht: die beiden config-Werte, die
+  Log-Zeile "Pack-Webserver ...", der Hoster (G-Portal oder Instant Host).
+  Mit 0.1.7 zeigt der Fehler-Bereich den genauen Grund.
+- Web-Tunnel funktioniert auf G-Portal, auf Instant Host nicht (noch nicht
+  diagnostiziert; Idee: Tunnel mit freiem Server-Port unabhaengig von
+  pack.web.port).
+- PeakAchievements noch nicht im Spiel geprueft: Toast-Aussehen, ob erreichte
+  Achievements nach einem Serverneustart erhalten bleiben, Sperren per
+  vanilla.json.
+- Die Pack-Meldung der Mod (PackReport) ist nur per Test, nicht im Spiel
+  durchgespielt.
+- Naechste Stufen Achievements: Skill-Tree-Bildschirm (A8), Web-Editor (A6),
+  Punkte/Saisons (A7, A10), Toast-Stile (A9).
+- Weitere Ideen/Backlog: Mace-Item-Definitionen, native Admin-Menues,
+  PeakStats, ServerPackKeeper.

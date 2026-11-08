@@ -75,6 +75,42 @@ public final class PeakAchievementsModule implements PeakModule, Listener, Comma
             command.setExecutor(this);
             command.setTabCompleter(this);
         }
+        if (context.web().enabled()) {
+            try (java.io.InputStream in = PeakAchievementsModule.class.getResourceAsStream("/modules/peakachievements/panel.js")) {
+                if (in == null) throw new IOException("panel.js fehlt im Jar");
+                new AchievementsWeb(context.web(), new AchievementsWeb.Host() {
+                    @Override
+                    public AchievementStore live() {
+                        return store;
+                    }
+
+                    @Override
+                    public java.nio.file.Path folder() {
+                        return context.dataFolder().toPath();
+                    }
+
+                    @Override
+                    public boolean peakMode() {
+                        return PeakAchievementsModule.this.peakMode();
+                    }
+
+                    @Override
+                    public void applyLive() throws IOException {
+                        store.load();
+                        if (!active) return;
+                        // Entfernte Fortschritte gibt Paper erst spaeter frei: kurz warten, dann neu laden
+                        unpublish();
+                        Bukkit.getScheduler().runTaskLater(context.host(), () -> {
+                            if (!active) return;
+                            publish();
+                            for (Player online : Bukkit.getOnlinePlayers()) sync(online);
+                        }, 40L);
+                    }
+                }).register(new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8));
+            } catch (IOException e) {
+                context.logger().warning("Web-Seite von PeakAchievements nicht verfuegbar: " + e.getMessage());
+            }
+        }
         if (peakMode()) activate();
         else context.logger().info("Vanilla-Modus: Minecraft-Fortschritte bleiben unveraendert, PeakAchievements ist aus. Einschalten: /peakachievements mode peak");
     }
@@ -97,6 +133,7 @@ public final class PeakAchievementsModule implements PeakModule, Listener, Comma
         var host = context.host();
         host.getServer().getPluginManager().registerEvents(this, host);
         publish();
+        for (Player online : Bukkit.getOnlinePlayers()) sync(online);
         statTask = host.getServer().getScheduler().runTaskTimer(host, this::checkStats, 100L, 100L);
         saveTask = host.getServer().getScheduler().runTaskTimer(host, this::save, 600L, 600L);
         active = true;
@@ -155,27 +192,104 @@ public final class PeakAchievementsModule implements PeakModule, Listener, Comma
     @SuppressWarnings("deprecation")
     private void publish() {
         unpublish();
-        var unsafe = Bukkit.getUnsafe();
         var cfg = context.config();
         NamespacedKey root = new NamespacedKey(AdvancementJson.NAMESPACE, AdvancementJson.ROOT);
         if (!load(root, AdvancementJson.root(cfg.getString("tab.title", "PeakVerse"), cfg.getString("tab.description", "Eigene Achievements dieses Servers")))) return;
-        List<Achievement> pending = new ArrayList<>(store.all().stream().filter(a -> a.enabled).toList());
+        boolean announce = cfg.getBoolean("announce-to-chat", true);
+        // Alle Knoten (Kopien der Minecraft-Fortschritte und eigene Achievements) in einer Liste; geladen wird nach Eltern geordnet
+        List<Node> pending = new ArrayList<>();
+        java.util.Set<String> mirrored = new HashSet<>();
+        List<Advancement> vanilla = cfg.getBoolean("mirror-vanilla", true) ? VanillaMirror.collect() : List.of();
+        for (Advancement adv : vanilla) if (store.vanillaEnabled(adv.getKey().toString())) mirrored.add(adv.getKey().toString());
+        for (Advancement adv : vanilla) {
+            String vk = adv.getKey().toString();
+            if (!mirrored.contains(vk)) continue;
+            VanillaOverride o = store.vanilla(vk);
+            String wanted = o.parent; // null = wie in Minecraft, leer = direkt an die Wurzel
+            String parent = wanted == null ? null : wanted.isEmpty() ? root.toString() : resolveParent(wanted, mirrored);
+            if (parent == null) {
+                parent = root.toString();
+                for (Advancement p = adv.getParent(); p != null; p = p.getParent()) {
+                    if (mirrored.contains(p.getKey().toString())) {
+                        parent = VanillaMirror.mirrorKey(p.getKey()).toString();
+                        break;
+                    }
+                }
+            }
+            pending.add(new Node(VanillaMirror.mirrorKey(adv.getKey()), adv.getKey(), parent, p -> VanillaMirror.json(adv, p, o)));
+        }
+        for (Achievement a : store.all()) {
+            if (!a.enabled) continue;
+            String parent = a.parent == null || a.parent.isEmpty() ? null : resolveParent(a.parent, mirrored);
+            pending.add(new Node(NamespacedKey.fromString(AdvancementJson.key(a.id)), null, parent == null ? root.toString() : parent, p -> AdvancementJson.of(a, p, announce)));
+        }
         boolean progressed = true;
         while (!pending.isEmpty() && progressed) {
             progressed = false;
             for (var it = pending.iterator(); it.hasNext(); ) {
-                Achievement a = it.next();
-                String parent = parentKey(a);
-                if (parent == null) continue; // Elternteil kommt in einem spaeteren Durchlauf
-                NamespacedKey key = NamespacedKey.fromString(AdvancementJson.key(a.id));
-                load(key, AdvancementJson.of(a, parent, cfg.getBoolean("announce-to-chat", true)));
+                Node n = it.next();
+                if (!n.parent.equals(root.toString()) && !loaded.contains(NamespacedKey.fromString(n.parent))) continue; // Elternteil kommt spaeter
+                if (load(n.key, n.json.apply(n.parent)) && n.vanilla != null) mirrors.put(n.vanilla, n.key);
                 it.remove();
                 progressed = true;
             }
         }
         long live = loaded.stream().filter(k -> Bukkit.getAdvancement(k) != null).count();
         if (live != loaded.size()) context.logger().warning("Nur " + live + " von " + loaded.size() + " Fortschritten sind aktiv (Paper gibt entfernte erst spaeter frei).");
-        for (Achievement a : pending) context.logger().warning("Achievement " + a.id + " hat keinen ladbaren Elternteil (" + a.parent + ") und wird nicht angezeigt.");
+        for (Node n : pending) context.logger().warning("Fortschritt " + n.key + " hat keinen ladbaren Elternteil (" + n.parent + ") und wird nicht angezeigt.");
+        context.logger().info(mirrors.size() + " Minecraft-Fortschritte in den Reiter gespiegelt.");
+    }
+
+    /** Ein Knoten des Baums: Schluessel, Original (nur Kopien), Elternteil und der Bauplan fuer das JSON. */
+    private record Node(NamespacedKey key, NamespacedKey vanilla, String parent, java.util.function.Function<String, String> json) {}
+
+    /** Elternangabe ({@code minecraft:...} oder eigene Kennung) -> Schluessel des Fortschritts oder {@code null}, wenn es den Elternteil nicht gibt. */
+    private String resolveParent(String wanted, java.util.Set<String> mirrored) {
+        if (wanted.startsWith("minecraft:")) return mirrored.contains(wanted) ? VanillaMirror.mirrorKey(NamespacedKey.fromString(wanted)).toString() : null;
+        Achievement p = store.get(wanted);
+        return p != null && p.enabled ? AdvancementJson.key(p.id) : null;
+    }
+
+    /** Minecraft-Fortschritt -> Kopie im Reiter PeakVerse. */
+    private final java.util.Map<NamespacedKey, NamespacedKey> mirrors = new java.util.HashMap<>();
+    /** Setzt die Kopien eines Spielers auf den Stand der Originale (still, ohne Toast). */
+    private void syncMirrors(Player p) {
+        if (mirrors.isEmpty() || !p.isOnline()) return;
+        for (var e : mirrors.entrySet()) {
+            Advancement orig = Bukkit.getAdvancement(e.getKey());
+            Advancement copy = Bukkit.getAdvancement(e.getValue());
+            if (orig == null || copy == null) continue;
+            boolean origDone = p.getAdvancementProgress(orig).isDone();
+            var copyProgress = p.getAdvancementProgress(copy);
+            // Minecraft hat das Sagen: die Kopie folgt dem Original in beide Richtungen (auch nach /advancement revoke)
+            if (origDone && !copyProgress.isDone()) copyProgress.awardCriteria(AdvancementJson.CRITERION);
+            else if (!origDone && copyProgress.isDone()) copyProgress.revokeCriteria(AdvancementJson.CRITERION);
+        }
+    }
+
+    /** Nimmt der Server Fortschritte per Befehl zurueck, ziehen die Kopien kurz danach nach. */
+    @EventHandler(priority = org.bukkit.event.EventPriority.MONITOR, ignoreCancelled = true)
+    public void onCommand(org.bukkit.event.server.ServerCommandEvent e) {
+        if (e.getCommand().toLowerCase(Locale.ROOT).startsWith("advancement")) resyncSoon();
+    }
+
+    @EventHandler(priority = org.bukkit.event.EventPriority.MONITOR, ignoreCancelled = true)
+    public void onPlayerCommand(org.bukkit.event.player.PlayerCommandPreprocessEvent e) {
+        if (e.getMessage().toLowerCase(Locale.ROOT).startsWith("/advancement")) resyncSoon();
+    }
+
+    private void resyncSoon() {
+        Bukkit.getScheduler().runTaskLater(context.host(), () -> {
+            for (Player online : Bukkit.getOnlinePlayers()) syncMirrors(online);
+        }, 5L);
+    }
+
+    @EventHandler
+    public void onVanillaDone(org.bukkit.event.player.PlayerAdvancementDoneEvent e) {
+        NamespacedKey mk = mirrors.get(e.getAdvancement().getKey());
+        if (mk == null) return;
+        Advancement copy = Bukkit.getAdvancement(mk);
+        if (copy != null) e.getPlayer().getAdvancementProgress(copy).awardCriteria(AdvancementJson.CRITERION);
     }
 
     /** Laedt einen Fortschritt; existiert er noch von frueher, wird er zuerst entfernt und dann neu geladen. */
@@ -207,15 +321,6 @@ public final class PeakAchievementsModule implements PeakModule, Listener, Comma
         return false;
     }
 
-    /** Schluessel des Elternteils oder {@code null}, wenn der Elternteil noch nicht geladen ist. */
-    private String parentKey(Achievement a) {
-        if (a.parent == null || a.parent.isEmpty()) return AdvancementJson.NAMESPACE + ":" + AdvancementJson.ROOT;
-        if (a.parent.startsWith("minecraft:")) return Bukkit.getAdvancement(NamespacedKey.fromString(a.parent)) != null ? a.parent : AdvancementJson.NAMESPACE + ":" + AdvancementJson.ROOT;
-        Achievement p = store.get(a.parent);
-        if (p == null || !p.enabled) return AdvancementJson.NAMESPACE + ":" + AdvancementJson.ROOT;
-        return loaded.contains(NamespacedKey.fromString(AdvancementJson.key(p.id))) ? AdvancementJson.key(p.id) : null;
-    }
-
     @SuppressWarnings("deprecation")
     private void unpublish() {
         for (NamespacedKey k : loaded) {
@@ -226,6 +331,7 @@ public final class PeakAchievementsModule implements PeakModule, Listener, Comma
             }
         }
         loaded.clear();
+        mirrors.clear();
     }
 
     // ---- Ausloeser ----
@@ -280,6 +386,7 @@ public final class PeakAchievementsModule implements PeakModule, Listener, Comma
     /** Stellt sicher, dass alle gespeicherten Achievements auch im Fortschritts-Fenster des Spielers erreicht sind. */
     private void sync(Player p) {
         if (store == null || !p.isOnline()) return;
+        syncMirrors(p);
         for (String id : progress.done(p.getUniqueId())) {
             Achievement a = store.get(id);
             if (a != null && a.enabled) grantAdvancement(p, a);

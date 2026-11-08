@@ -4,6 +4,9 @@
 #   vanilla = alles aus, Minecraft-Fortschritte bleiben genau wie sie sind und lassen sich nicht aendern
 # Wechseln im Spiel: /peakachievements mode <peak|vanilla>
 mode: peak
+# Alle Minecraft-Fortschritte als stille Kopien in den Reiter PeakVerse laden (erreicht, sobald das Original erreicht ist).
+# Die normalen Minecraft-Reiter bleiben bestehen; einzelne Fortschritte lassen sich per vanilla.json abschalten.
+mirror-vanilla: true
 # Beispiel-Achievements beim allerersten Start anlegen (danach beliebig aendern oder loeschen)
 examples: true
 # Meldung im Chat, wenn jemand ein Achievement erreicht (der Toast oben rechts kommt immer)

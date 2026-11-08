@@ -4,6 +4,8 @@
 # Aufruf:  .\tools\release.ps1                      (bauen mit Tests, Dateien in dist\release\<Version> ablegen, nichts hochladen)
 #          .\tools\release.ps1 -Upload              (zusaetzlich als Entwurf zu GitHub hochladen)
 #          .\tools\release.ps1 -SkipBuild           (nur aus dem vorhandenen dist\ zusammenstellen)
+#          .\tools\release.ps1 -Beta 0.1.8-beta.1 -Upload   (Beta: wird als VORAB-Version auf GitHub veroeffentlicht; normale Server sehen sie nicht,
+#                                                        wer sie testen will, nutzt im Spiel /peakcore update beta)
 # Dateien im Release: PeakCore-<V>.jar (Server-Plugin mit allen Modulen), PeakCore-Mod-<V>.jar, PeakSound-Mod-<V>.jar und je Datei eine .sha256 (SHA-256).
 param(
     [string]$Repo = 'Snippe187/PeakVerse-Releases',
@@ -16,12 +18,25 @@ $version = ((Get-Content (Join-Path $root 'Bundle\gradle.properties') | Where-Ob
 if ($version -notmatch '^\d+\.\d+\.\d+([-.][0-9A-Za-z.]+)?$') { throw "Ungueltige Version '$version' in Bundle\gradle.properties" }
 $out = Join-Path $root "dist\release\$version"
 
-if (-not $SkipBuild) {
-    Write-Host "== Bauen mit Tests" -ForegroundColor Cyan
-    & (Join-Path $PSScriptRoot 'build-all.ps1')
-    if ($LASTEXITCODE -ne 0 -and $null -ne $LASTEXITCODE) { throw 'Build fehlgeschlagen' }
+# Fuer eine Beta werden die Versionsnummern nur fuers Bauen getauscht und danach wieder zurueckgesetzt
+$versionFiles = @('Bundle\gradle.properties', 'PeakCore\gradle.properties', 'PeakSound\gradle.properties', 'TexturePeak\build.gradle.kts', 'PeakBoard\build.gradle.kts', 'PeakAchievements\build.gradle.kts') | ForEach-Object { Join-Path $root $_ }
+$saved = @{}
+try {
+    if ($Beta) {
+        foreach ($f in $versionFiles) {
+            $text = [IO.File]::ReadAllText($f); $saved[$f] = $text
+            [IO.File]::WriteAllText($f, $text.Replace($base, $version), (New-Object Text.UTF8Encoding($false)))
+        }
+    }
+    if (-not $SkipBuild) {
+        Write-Host "== Bauen mit Tests (Version $version)" -ForegroundColor Cyan
+        & (Join-Path $PSScriptRoot 'build-all.ps1')
+        if ($LASTEXITCODE -ne 0 -and $null -ne $LASTEXITCODE) { throw 'Build fehlgeschlagen' }
+    }
 }
-
+finally {
+    foreach ($f in $saved.Keys) { [IO.File]::WriteAllText($f, $saved[$f], (New-Object Text.UTF8Encoding($false))) }
+}
 $files = [ordered]@{
     "PeakCore-$version.jar"      = Join-Path $root "dist\PeakCore\Plugin\PeakCore-$version.jar"
     "PeakCore-Mod-$version.jar"  = Join-Path $root "dist\PeakCore\Mod\PeakCore-$version.jar"
@@ -52,6 +67,7 @@ function Get-Section([string]$file, [string]$version) {
     ($res -join "`n").Trim()
 }
 $notes = "# PeakVerse $version`n`n"
+if ($Beta) { $notes += "> **Beta zum Testen.** Das ist eine Vorab-Version: es kann Fehler geben, am besten zuerst nicht auf dem Haupt-Server ausprobieren. Normale Updates (update.enabled) bieten sie nicht an. Installieren: im Spiel ``/peakcore update beta`` und dann auf [Ja, Beta laden] klicken, danach neu starten. Die Mods fuer Spieler muessen von Hand getauscht werden.`n`n" }
 $notes += "Dateien:`n- **PeakCore-$version.jar**: Server-Plugin (Paper, Minecraft 26.2) mit allen Modulen: PeakSound, TexturePeak, PeakBoard, PeakAchievements`n- **PeakCore-Mod-$version.jar** und **PeakSound-Mod-$version.jar**: Fabric-Mods fuer Spieler (PeakSound braucht PeakCore und die Fabric API)`n- jede Datei mit einer .sha256-Pruefsumme`n`n"
 $notes += "Update auf dem Server: in der PeakCore-config.yml ``update.enabled: true`` setzen; die Web-Oberflaeche zeigt dann diese Version an.`n`n"
 foreach ($m in 'PeakCore', 'PeakSound', 'TexturePeak', 'PeakBoard', 'PeakAchievements') {
@@ -65,6 +81,8 @@ Write-Host "Dateien in $out" -ForegroundColor Green
 if (-not $Upload) { Write-Host 'Nichts hochgeladen (zum Hochladen als Entwurf: -Upload).' -ForegroundColor Yellow; return }
 gh repo view $Repo --json name | Out-Null
 if ($LASTEXITCODE -ne 0) { throw "Das Repo $Repo gibt es nicht (oeffentlich anlegen, siehe docs/ANLEITUNG.md)." }
-gh release create "v$version" --repo $Repo --draft --title "PeakVerse $version" --notes-file $notesFile @assets
+if ($Beta) { gh release create "v$version" --repo $Repo --prerelease --title "PeakVerse $version (Beta)" --notes-file $notesFile @assets }
+else { gh release create "v$version" --repo $Repo --draft --title "PeakVerse $version" --notes-file $notesFile @assets }
 if ($LASTEXITCODE -ne 0) { throw 'Release konnte nicht angelegt werden.' }
+if ($Beta) { Write-Host "Beta ist als Vorab-Version veroeffentlicht: https://github.com/$Repo/releases/tag/v$version" -ForegroundColor Green; return }
 Write-Host "Entwurf angelegt. Zum Freigeben bei GitHub oeffnen: https://github.com/$Repo/releases und 'Publish release' klicken." -ForegroundColor Green
