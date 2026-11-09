@@ -1,0 +1,12 @@
+# PeakAdmin: Server-Verwaltung im Web
+backup:
+  folder: ""          # leer = plugins/PeakAdmin/backups
+  interval-hours: 0   # 0 = keine automatische Sicherung
+  keep: 5             # so viele Sicherungen bleiben erhalten
+restart:
+  daily-at: ""        # z. B. "04:30" fuer einen taeglichen Neustart (leer = aus)
+  warn-minutes: 5     # Vorwarnung vor dem Neustart
+status:
+  history-samples: 360   # ein Messpunkt alle 30 Sekunden
+chat:
+  history: 300

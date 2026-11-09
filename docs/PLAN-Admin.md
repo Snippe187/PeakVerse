@@ -25,6 +25,16 @@ Entschieden mit dem Nutzer:
 6. PeakWarps + Karte: Warps (Web, `/warp`, Recht je Warp), Reiter Karte (SquareMap eingebettet, Tunnel), Marker über die SquareMap-API.
 7. WorldGuard/WorldEdit: Regionen und Flags im Web, Regionen auf der Karte, Schematics verwalten, Auswahl als Region/Warp.
 
+## Client-Mod: eine einzige Jar (entschieden)
+- Name **PeakVerse**: `PeakVerse-Mod-<Version>.jar`; Server bleibt `PeakCore-<Version>.jar`.
+- Ersetzt PeakCore-Mod und PeakSound-Mod sofort; der Auto-Updater tauscht beim Spielende die alten Jars.
+- Funktionen schalten sich nur ein, wenn der Server das Modul meldet (auf fremden Servern passiert nichts).
+- Modrinth: EIN Projekt, je Version beide Dateien (Mod + Plugin). Nur vorbereiten, kein Upload ohne Ja.
+
+## Bereits vorhanden (nicht neu bauen)
+- PeakCore hat schon: Rollen, Rechte je Spieler, Rechte-Katalog aus allen Plugins, Notizen, Verwarnungen, Sperren, Protokoll (`perm/`, `PlayersWeb`).
+- Darum: Paket 5 = nur LuckPerms-Anbindung und Lücken füllen; Spieler-Verwaltung (PeakAdmin) ergänzt Kick/Ban/Whitelist/OP, Inventar, Endertruhe, Advancements.
+
 ## Offene Hinweise
 - Auf dem Test-Server gibt es weder SquareMap, LuckPerms, WorldGuard noch WorldEdit; die Anbindungen werden mit Tests und, wo möglich, mit den Plugins vom Test-Server geprüft.
 - Das Release (Entwurf 0.1.8 ersetzen oder 0.1.9) braucht ein ausdrückliches Ja.
