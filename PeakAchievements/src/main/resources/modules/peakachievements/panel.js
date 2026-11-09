@@ -248,9 +248,10 @@ export default async function mount(root, ctx) {
     }    return { edges, boxes, crossings: edges.reduce((s, e) => s + crossings(e, edges), 0) / 2 };
   }
   // ---------- Symbole ----------
+  let texStatus = null; // null = unbekannt, sonst die Antwort von TexturePeak ({ready, busy, error}) oder {missing:true}
   let textures = null; // Namen der vorhandenen Standard-Texturen (TexturePeak), damit nur existierende Bilder angefragt werden
   function icon(name, size = 32) {
-    const kind = textures ? (textures.item.has(name) ? 'item' : textures.block.has(name) ? 'block' : null) : 'item';
+    const kind = textures ? (textures.item.has(name) ? 'item' : textures.block.has(name) ? 'block' : null) : (texStatus === null ? 'item' : null);
     if (!kind) return h('span', { class: 'pa-ic ph', style: 'width:' + size + 'px;height:' + size + 'px;line-height:' + size + 'px' }, (name || '?')[0].toUpperCase());
     const img = h('img', { class: 'pa-ic', width: size, height: size, alt: '', draggable: 'false', src: '/api/texturepeak/vanilla/' + kind + '/' + encodeURIComponent(name) });
     img.onerror = () => img.replaceWith(h('span', { class: 'pa-ic ph', style: 'width:' + size + 'px;height:' + size + 'px;line-height:' + size + 'px' }, (name || '?')[0].toUpperCase()));
@@ -267,8 +268,16 @@ export default async function mount(root, ctx) {
       h('h1', {}, 'Achievements'),
       h('p', { class: 'sub' }, L('Alle Minecraft-Fortschritte und eigene Achievements in einem Baum. Knoten anklicken zum Bearbeiten, auf einen anderen Knoten ziehen zum Umhaengen. Aenderungen gelten erst nach dem Veroeffentlichen.', 'All Minecraft advancements and custom achievements in one tree. Click a node to edit, drag it onto another node to re-attach. Changes apply after publishing.')),
       st.mode !== 'peak' ? h('div', { class: 'tag warn', style: 'display:block;margin:8px 0' }, L('Der Vanilla-Modus ist an: hier laesst sich nichts bearbeiten. Mit /peakachievements mode peak einschalten.', 'Vanilla mode is on: nothing can be edited. Enable with /peakachievements mode peak.')) : null,
-      barEl, h('div', { class: 'pa-main' }, treeEl, sideEl)].filter(Boolean));
+      texBanner(), barEl, h('div', { class: 'pa-main' }, treeEl, sideEl)].filter(Boolean));
     drawBar(); drawTree(); drawSide();
+  }
+
+  function texBanner() {
+    if (!texStatus || texStatus.ready) return null;
+    if (texStatus.missing) return h('div', { class: 'tag warn', style: 'display:block;margin:8px 0' }, L('Die Item-Bilder fehlen: das Modul TexturePeak ist aus oder nicht erreichbar. Ohne es siehst du Buchstaben statt Symbolen.', 'Item images are missing: the TexturePeak module is off or unreachable. Without it you see letters instead of icons.'));
+    return h('div', { class: 'tag warn', style: 'display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:8px 0' },
+      h('span', {}, texStatus.busy ? L('Die Standard-Bilder von Minecraft werden gerade geladen ...', 'Loading the standard Minecraft images ...') : texStatus.error ? L('Laden der Standard-Bilder fehlgeschlagen: ', 'Loading the standard images failed: ') + texStatus.error : L('Die Standard-Bilder von Minecraft sind noch nicht geladen, deshalb siehst du Buchstaben statt Symbolen.', 'The standard Minecraft images are not loaded yet, so you see letters instead of icons.')),
+      texStatus.busy ? null : h('button', { class: 'px-btn small primary', onclick: downloadTextures }, texStatus.error ? L('Nochmal versuchen', 'Try again') : L('Jetzt laden (einmalig)', 'Load now (once)')));
   }
 
   function drawBar() {
@@ -515,6 +524,23 @@ export default async function mount(root, ctx) {
 
   ctx.on(async d => { if (d.module === 'peakachievements') { try { st = await ctx.api('state'); } catch { return; } render(); } });
   try { meta = await ctx.api('meta'); } catch { meta = null; }
-  try { const v = await fetch('/api/texturepeak/vanilla', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null); if (v && v.ready) textures = { item: new Set(v.item), block: new Set(v.block) }; } catch { textures = null; }
+  async function loadTextures() {
+    try {
+      const r = await fetch('/api/texturepeak/vanilla', { credentials: 'same-origin' });
+      if (!r.ok) { texStatus = { missing: true }; textures = null; return; }
+      const v = await r.json(); texStatus = v;
+      textures = v.ready ? { item: new Set(v.item), block: new Set(v.block) } : null;
+    } catch { texStatus = { missing: true }; textures = null; }
+  }
+  /** Laedt die Standard-Bilder von Minecraft ueber TexturePeak herunter (einmalig) und wartet, bis sie da sind. */
+  async function downloadTextures() {
+    try { await fetch('/api/texturepeak/vanilla/download', { method: 'POST', headers: { 'X-Peak': '1' }, credentials: 'same-origin' }); } catch { /* wird unten geprueft */ }
+    for (let i = 0; i < 90; i++) {
+      await new Promise(r => setTimeout(r, 2000));
+      await loadTextures(); render();
+      if (texStatus && (texStatus.ready || (!texStatus.busy && texStatus.error))) break;
+    }
+  }
+  await loadTextures();
   await reload();
 }

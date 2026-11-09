@@ -6,6 +6,8 @@
 - Alle Minecraft-Fortschritte erscheinen als stille Kopien im Reiter PeakVerse (erreicht, sobald das Original erreicht ist; Minecraft bleibt die Quelle, auch nach `/advancement revoke`). Schalter `mirror-vanilla` in der config.yml.
 - Neue Web-Seite **Achievements** (Module -> Achievements): zwei Mindmap-Baeume (Minecraft und Eigene) mit eckigen Minecraft-Kacheln, Linien als sanfte Kurven um Kacheln herum, Zoom und Alles zeigen. Minecraft-Fortschritte und eigene Achievements bearbeiten, per Ziehen umhaengen (mit Live-Vorschau der Linie), Entwurf mit Veroeffentlichen und Sicherung (`backups/`), Vorschau als Kachel und Toast. Konsolen-Befehle als Belohnung darf nur ein Operator setzen.
 - Befehl `/peakachievements` (`/ach`): me, list, info, give, revoke, enable, disable, add, remove, reload, mode. 8 Beispiel-Achievements beim ersten Start.
+- Der Reiter PeakVerse zeigt sich jetzt von Anfang an (die Wurzel gilt wie bei Minecrafts eigenen Reitern als erreicht); vorher blieb er leer, bis ein Spieler etwas erreicht hatte.
+- Web-Seite: fehlen die Standard-Bilder von Minecraft (TexturePeak), steht ein Hinweis mit Knopf "Jetzt laden" da statt nur Buchstaben.
 
 ## 0.1.8-beta.1
 - Alle Minecraft-Fortschritte erscheinen als stille Kopien im Reiter PeakVerse (erreicht, sobald das Original erreicht ist; Minecraft bleibt die Quelle, die Kopie folgt auch nach /advancement revoke). Schalter `mirror-vanilla` in der config.yml.

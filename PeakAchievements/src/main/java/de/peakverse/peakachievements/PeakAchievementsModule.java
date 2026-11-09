@@ -386,6 +386,9 @@ public final class PeakAchievementsModule implements PeakModule, Listener, Comma
     /** Stellt sicher, dass alle gespeicherten Achievements auch im Fortschritts-Fenster des Spielers erreicht sind. */
     private void sync(Player p) {
         if (store == null || !p.isOnline()) return;
+        // Wie bei Minecrafts eigenen Reitern ist die Wurzel von Anfang an erreicht: der Client zeigt einen Reiter nur, wenn darin etwas "erreicht" ist
+        Advancement root = Bukkit.getAdvancement(new NamespacedKey(AdvancementJson.NAMESPACE, AdvancementJson.ROOT));
+        if (root != null && !p.getAdvancementProgress(root).isDone()) p.getAdvancementProgress(root).awardCriteria(AdvancementJson.CRITERION);
         syncMirrors(p);
         for (String id : progress.done(p.getUniqueId())) {
             Achievement a = store.get(id);
