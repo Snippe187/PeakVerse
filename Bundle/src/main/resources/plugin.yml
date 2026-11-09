@@ -3,7 +3,7 @@ version: '${version}'
 main: de.peakverse.core.plugin.PeakCorePlugin
 api-version: '26.2'
 description: "PeakVerse: Basis (API, Kanal zur Mod) und eingebaute Module (PeakSound, spaeter TexturePeak)."
-softdepend: [voicechat]
+softdepend: [voicechat, LuckPerms, WorldGuard, WorldEdit, squaremap]
 commands:
   peakweb:
     description: Link zur PeakVerse-Web-Oberflaeche (fuer Rollen mit Web-Zugang)

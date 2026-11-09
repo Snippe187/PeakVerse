@@ -59,6 +59,58 @@ public final class AdminWeb {
         web.route("backups/delete", this::backupDelete);
         web.route("restart", this::restart);
         web.route("settings", this::settings);
+        web.route("lp", r -> main(() -> {
+            JsonObject o = lpOn() ? LpBridge.groups() : new JsonObject();
+            o.addProperty("available", lpOn());
+            return WebResponse.json(o.toString());
+        }));
+        web.route("lp/group", this::lpGroup);
+        web.route("lp/user/*", this::lpUser);
+    }
+
+    // ---- LuckPerms ----
+
+    private WebResponse lpGroup(WebRequest r) throws Exception {
+        JsonObject o = body(r);
+        String act = str(o, "action");
+        return change(r, "lp", "LuckPerms Gruppe: " + act + " " + (o.has("group") ? o.get("group").getAsString() : ""), () -> {
+            requireOp(r);
+            if (!lpOn()) throw new IllegalStateException("LuckPerms ist nicht installiert.");
+            String g = str(o, "group");
+            switch (act) {
+                case "create" -> LpBridge.createGroup(g);
+                case "delete" -> LpBridge.deleteGroup(g);
+                case "perm" -> LpBridge.groupPermission(g, str(o, "key"), o.has("value") && !o.get("value").isJsonNull() ? o.get("value").getAsBoolean() : null);
+                case "parent" -> LpBridge.groupParent(g, str(o, "parent"), o.get("on").getAsBoolean());
+                default -> throw new IllegalArgumentException("Unbekannte Aktion: " + act);
+            }
+            return LpBridge.groups();
+        });
+    }
+
+    private WebResponse lpUser(WebRequest r) throws Exception {
+        UUID id;
+        try {
+            id = UUID.fromString(r.path().split("/")[2]);
+        } catch (IllegalArgumentException | ArrayIndexOutOfBoundsException e) {
+            return WebResponse.error(400, "Ungueltige Spieler-Kennung");
+        }
+        if (r.method().equals("GET")) return main(() -> {
+            if (!lpOn()) throw new IllegalStateException("LuckPerms ist nicht installiert.");
+            return WebResponse.json(LpBridge.userInfo(id).toString());
+        });
+        JsonObject o = body(r);
+        String act = str(o, "action");
+        return change(r, "lp", "LuckPerms Spieler " + id + ": " + act, () -> {
+            requireOp(r);
+            if (!lpOn()) throw new IllegalStateException("LuckPerms ist nicht installiert.");
+            switch (act) {
+                case "group" -> LpBridge.userGroup(id, str(o, "group"), o.get("on").getAsBoolean());
+                case "perm" -> LpBridge.userPermission(id, str(o, "key"), o.has("value") && !o.get("value").isJsonNull() ? o.get("value").getAsBoolean() : null);
+                default -> throw new IllegalArgumentException("Unbekannte Aktion: " + act);
+            }
+            return LpBridge.userInfo(id);
+        });
     }
 
     // ---- Hilfen ----
@@ -88,6 +140,11 @@ public final class AdminWeb {
             web.changed(event, r.admin());
         }
         return res;
+    }
+
+    /** Nur den Plugin-Namen pruefen: die LuckPerms-Klassen (LpBridge) werden erst geladen, wenn das Plugin da ist. */
+    private static boolean lpOn() {
+        return Bukkit.getPluginManager().isPluginEnabled("LuckPerms");
     }
 
     private static boolean isOp(String name) {

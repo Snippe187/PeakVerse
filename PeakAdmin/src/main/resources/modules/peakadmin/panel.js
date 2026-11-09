@@ -3,7 +3,7 @@ export default async function mount(root, ctx) {
   const { h, t } = ctx;
   const L = (de, en) => t({ de, en });
   let tab = 'players', players = [], q = '', cur = null, detail = null, advs = null, advQ = '', inv = 'inventory';
-  let consolePos = -1, consoleLines = [], chatLast = 0, chatMsgs = [], chatMutes = [], status = null, bk = null, cfg = null;
+  let lp = null, lpSel = null, lpQ = '', lpNode = '', consolePos = -1, consoleLines = [], chatLast = 0, chatMsgs = [], chatMutes = [], status = null, bk = null, cfg = null;
   const timers = [];
   const alive = () => root.isConnected;
   const every = (fn, ms) => { const id = setInterval(() => { if (!alive()) { clearInterval(id); return; } fn(); }, ms); timers.push(id); };
@@ -172,15 +172,38 @@ export default async function mount(root, ctx) {
         btn(L('Speichern', 'Save'), async () => { const r = await call('settings', { interval: +iv.value, keep: +keep.value, dailyAt: daily.value, warn: +warn.value }, L('Gespeichert', 'Saved')); if (r && r !== true) { cfg = r; render(); } }, 'primary')));
   }
 
+  // ---------- Rechte (LuckPerms) ----------
+  async function loadLp() { lp = await call('lp'); if (lp && lp.available && !lpSel && lp.groups.length) lpSel = lp.groups[0].name; }
+  async function lpDo(body, ok) { const r = await call('lp/group', body, ok); if (r && r !== true) { lp = Object.assign({ available: true }, r); render(); } }
+  function permsTab() {
+    if (!lp) return h('div', { class: 'sub' }, '...');
+    if (!lp.available) return h('div', { class: 'pa-box' }, h('b', {}, L('LuckPerms ist nicht installiert', 'LuckPerms is not installed')),
+      h('div', { class: 'sub' }, L('Installiere das Plugin LuckPerms auf dem Server (Ordner plugins) und starte neu. Dann erscheint hier die komplette Rechte-Verwaltung: Gruppen, Rechte, Erben. Rechte aller Plugins (z. B. Assassin-Tales) kannst du dann aus einer Liste waehlen.', 'Install the LuckPerms plugin on the server (plugins folder) and restart. Then full permission management appears here: groups, permissions, inheritance. Permissions of all plugins can be picked from a list.')),
+      h('div', { class: 'sub' }, L('Ohne LuckPerms gibt es die PeakCore-Rollen im Reiter "Spieler".', 'Without LuckPerms use the PeakCore roles in the "Players" tab.')));
+    const g = lp.groups.find(x => x.name === lpSel);
+    const nn = h('input', { class: 'px-input', placeholder: L('neue Gruppe', 'new group') });
+    const node = h('input', { class: 'px-input', list: 'pa-nodes', placeholder: 'plugin.recht.name', value: lpNode, style: 'flex:1', oninput: e => { lpNode = e.target.value; } });
+    const dl = h('datalist', { id: 'pa-nodes' }, lp.catalog.slice(0, 2000).map(c => h('option', { value: c.node }, c.desc)));
+    const parent = h('select', { class: 'px-input' }, lp.groups.filter(x => g && x.name !== g.name && !g.parents.includes(x.name)).map(x => h('option', { value: x.name }, x.name)));
+    return h('div', { class: 'pa-cols' },
+      h('div', {}, h('div', { class: 'pa-list' }, lp.groups.map(x => h('div', { class: 'pa-row' + (x.name === lpSel ? ' sel' : ''), onclick: () => { lpSel = x.name; render(); } }, h('b', {}, x.name), h('span', { class: 'sub' }, x.permissions.length + ' ' + L('Rechte', 'perms'))))),
+        h('div', { class: 'pa-acts' }, nn, btn(L('Anlegen', 'Create'), () => nn.value && (lpSel = nn.value.toLowerCase(), lpDo({ action: 'create', group: nn.value.toLowerCase() }, L('Angelegt', 'Created')))))),
+      g ? h('div', {}, h('h3', {}, g.name, ' ', btn(L('Gruppe loeschen', 'Delete group'), async () => { if (await ctx.confirm(L('Gruppe loeschen?', 'Delete group?') + ' ' + g.name)) { lpSel = null; await lpDo({ action: 'delete', group: g.name }, L('Geloescht', 'Deleted')); } }, 'danger')),
+        h('div', { class: 'pa-box' }, h('b', {}, L('Erbt von', 'Inherits from')), h('div', { class: 'pa-acts' }, g.parents.map(pn => h('span', { class: 'tag' }, pn, ' ', h('a', { style: 'cursor:pointer', onclick: () => lpDo({ action: 'parent', group: g.name, parent: pn, on: false }) }, '×'))), parent.options.length ? [parent, btn(L('Hinzufuegen', 'Add'), () => lpDo({ action: 'parent', group: g.name, parent: parent.value, on: true }))] : null)),
+        h('div', { class: 'pa-box' }, h('b', {}, L('Rechte', 'Permissions')), dl,
+          h('div', { class: 'pa-acts' }, node, btn(L('Erlauben', 'Allow'), () => node.value && lpDo({ action: 'perm', group: g.name, key: node.value.trim(), value: true }, 'OK')), btn(L('Verbieten', 'Deny'), () => node.value && lpDo({ action: 'perm', group: g.name, key: node.value.trim(), value: false }, 'OK'), 'danger')),
+          h('input', { class: 'px-input', placeholder: L('Rechte filtern...', 'Filter permissions...'), value: lpQ, oninput: e => { lpQ = e.target.value; render(); } }),
+          g.permissions.filter(p => !lpQ || p.key.includes(lpQ)).map(p => h('div', { class: 'row' }, h('span', { class: 'tag' + (p.value ? '' : ' warn') }, p.value ? L('erlaubt', 'allow') : L('verboten', 'deny')), h('span', {}, p.key), btn(L('Umschalten', 'Toggle'), () => lpDo({ action: 'perm', group: g.name, key: p.key, value: !p.value })), btn(L('Entfernen', 'Remove'), () => lpDo({ action: 'perm', group: g.name, key: p.key, value: null }), 'ghost'))))) : h('div', { class: 'sub' }, L('Gruppe waehlen oder anlegen.', 'Pick or create a group.')));
+  }
   // ---------- Rahmen ----------
-  const TABS = [['players', L('Spieler', 'Players')], ['console', L('Konsole', 'Console')], ['status', 'Status'], ['chat', 'Chat'], ['backups', L('Sicherungen & Neustart', 'Backups & restart')]];
+  const TABS = [['players', L('Spieler', 'Players')], ['console', L('Konsole', 'Console')], ['status', 'Status'], ['chat', 'Chat'], ['perms', L('Rechte (LuckPerms)', 'Permissions (LuckPerms)')], ['backups', L('Sicherungen & Neustart', 'Backups & restart')]];
   function render() {
-    const body = tab === 'players' ? playersTab() : tab === 'console' ? consoleTab() : tab === 'status' ? statusTab() : tab === 'chat' ? chatTab() : backupsTab();
+    const body = tab === 'players' ? playersTab() : tab === 'console' ? consoleTab() : tab === 'status' ? statusTab() : tab === 'chat' ? chatTab() : tab === 'perms' ? permsTab() : backupsTab();
     root.replaceChildren(h('div', { class: 'page' }, h('div', { class: 'pa-tabs' }, TABS.map(([id, label]) => h('button', { class: 'px-btn small' + (tab === id ? ' on' : ''), onclick: () => go(id) }, label))), body));
   }
   async function go(id) {
     tab = id;
-    if (id === 'players') await loadPlayers(); else if (id === 'status') status = await call('status'); else if (id === 'backups') await loadBackups();
+    if (id === 'players') await loadPlayers(); else if (id === 'status') status = await call('status'); else if (id === 'backups') await loadBackups(); else if (id === 'perms') await loadLp();
     else if (id === 'console') { await pollConsole(); } else if (id === 'chat') await pollChat();
     render();
   }

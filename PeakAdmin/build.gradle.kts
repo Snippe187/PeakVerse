@@ -19,6 +19,8 @@ dependencies {
     compileOnly("io.papermc.paper:paper-api:${property("paper_api_version")}")
     // Die PeakCore-API ist im fertigen Jar schon dabei, deshalb nur zum Kompilieren
     compileOnly("de.peakverse:core-api")
+    // LuckPerms ist ein eigenes Plugin des Servers; die API wird nur benutzt, wenn es installiert ist
+    compileOnly("net.luckperms:api:5.4")
 
     testCompileOnly("io.papermc.paper:paper-api:${property("paper_api_version")}")
     testImplementation("io.papermc.paper:paper-api:${property("paper_api_version")}")

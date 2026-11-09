@@ -7,4 +7,4 @@
 - **Status**: TPS, MSPT, RAM, Spieler, Uptime, Welten (Entitaeten/Chunks) mit Verlauf-Diagrammen.
 - **Chat**: Live-Chat lesen, Nachricht an alle senden, Stummschaltungen verwalten (`mutes.json`).
 - **Sicherungen und Neustart**: Welt-Sicherung als ZIP (von Hand oder alle X Stunden, alte werden aufgeraeumt), Neustart mit Countdown und Chat-Warnungen, optional taeglicher Neustart (`restart.daily-at`).
-- Alle Aenderungen stehen im Protokoll (Reiter Protokoll).
+- Alle Aenderungen stehen im Protokoll (Reiter Protokoll).- **Rechte (LuckPerms)**: ist LuckPerms installiert, erscheinen Gruppen, Rechte und Vererbung im Reiter 'Rechte'; Rechte aller Plugins stehen in einer Auswahlliste. Ohne LuckPerms bleiben die PeakCore-Rollen im Reiter 'Spieler'. (Noch nicht mit einem echten LuckPerms geprueft.)
