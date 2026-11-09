@@ -24,6 +24,11 @@ commands:
     description: Achievements ansehen und verwalten
     usage: /peakachievements <me|list|info|give|revoke|enable|disable|add|remove|reload>
     aliases: [ach]
+  peakenchants:
+    description: Verzauberungen (Datapack-Addon) ansehen und vergeben
+    usage: /peakenchants <list|info|book|apply>
+    permission: peakcore.admin
+    aliases: [pench]
   peaksoundvote:
     description: Abstimmen, den laufenden Song der Jukebox in deiner Naehe zu ueberspringen
     usage: /peaksoundvote

@@ -15,6 +15,7 @@ $modules = @(
     @{ Name = 'TexturePeak' },
     @{ Name = 'PeakBoard' },
     @{ Name = 'PeakAchievements' },
+    @{ Name = 'PeakEnchants' },
     @{ Name = 'Bundle';    Plugin = 'build\libs'; Dist = 'PeakCore'; JarPrefix = 'PeakCore' }   # zuletzt: braucht die Module
 )
 
