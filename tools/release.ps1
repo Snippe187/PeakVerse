@@ -6,7 +6,7 @@
 #          .\tools\release.ps1 -SkipBuild           (nur aus dem vorhandenen dist\ zusammenstellen)
 #          .\tools\release.ps1 -Beta 0.1.8-beta.1 -Upload   (Beta: wird als VORAB-Version auf GitHub veroeffentlicht; normale Server sehen sie nicht,
 #                                                        wer sie testen will, nutzt im Spiel /peakcore update beta)
-# Dateien im Release: PeakCore-<V>.jar (Server-Plugin mit allen Modulen), PeakCore-Mod-<V>.jar, PeakSound-Mod-<V>.jar und je Datei eine .sha256 (SHA-256).
+# Dateien im Release: PeakCore-<V>.jar (Server-Plugin mit allen Modulen), PeakVerse-Mod-<V>.jar (die eine Client-Mod) und je Datei eine .sha256 (SHA-256).
 param(
     [string]$Repo = 'Snippe187/PeakVerse-Releases',
     [switch]$Upload,
@@ -46,8 +46,7 @@ finally {
 }
 $files = [ordered]@{
     "PeakCore-$version.jar"      = Join-Path $root "dist\PeakCore\Plugin\PeakCore-$version.jar"
-    "PeakCore-Mod-$version.jar"  = Join-Path $root "dist\PeakCore\Mod\PeakCore-$version.jar"
-    "PeakSound-Mod-$version.jar" = Join-Path $root "dist\PeakSound\Mod\PeakSound-$version.jar"
+    "PeakVerse-Mod-$version.jar" = Join-Path $root "dist\PeakVerse\Mod\PeakVerse-$version.jar"
 }
 if (Test-Path $out) { Remove-Item $out -Recurse -Force }
 New-Item -ItemType Directory -Force $out | Out-Null
@@ -75,7 +74,7 @@ function Get-Section([string]$file, [string]$version) {
 }
 $notes = "# PeakVerse $version`n`n"
 if ($Beta) { $notes += "> **Beta zum Testen.** Das ist eine Vorab-Version: es kann Fehler geben, am besten zuerst nicht auf dem Haupt-Server ausprobieren. Normale Updates (update.enabled) bieten sie nicht an. Installieren: im Spiel ``/peakcore update beta`` und dann auf [Ja, Beta laden] klicken, danach neu starten. Die Mods fuer Spieler muessen von Hand getauscht werden.`n`n" }
-$notes += "Dateien:`n- **PeakCore-$version.jar**: Server-Plugin (Paper, Minecraft 26.2) mit allen Modulen: PeakSound, TexturePeak, PeakBoard, PeakAchievements, PeakEnchants, PeakAdmin, PeakWarps`n- **PeakCore-Mod-$version.jar** und **PeakSound-Mod-$version.jar**: Fabric-Mods fuer Spieler (PeakSound braucht PeakCore und die Fabric API)`n- jede Datei mit einer .sha256-Pruefsumme`n`n"
+$notes += "Dateien:`n- **PeakCore-$version.jar**: Server-Plugin (Paper, Minecraft 26.2) mit allen Modulen: PeakSound, TexturePeak, PeakBoard, PeakAchievements, PeakEnchants, PeakAdmin, PeakWarps`n- **PeakVerse-Mod-$version.jar**: die eine Fabric-Mod fuer Spieler (enthaelt PeakCore-Mod und PeakSound-Mod; braucht die Fabric API). Alte Einzel-Jars PeakCore-Mod und PeakSound-Mod aus dem mods-Ordner loeschen.`n- jede Datei mit einer .sha256-Pruefsumme`n`n"
 $notes += "Update auf dem Server: in der PeakCore-config.yml ``update.enabled: true`` setzen; die Web-Oberflaeche zeigt dann diese Version an.`n`n"
 foreach ($m in 'PeakCore', 'PeakSound', 'TexturePeak', 'PeakBoard', 'PeakAchievements', 'PeakEnchants', 'PeakAdmin', 'PeakWarps') {
     $s = Get-Section (Join-Path $root "$m\CHANGELOG.md") $version

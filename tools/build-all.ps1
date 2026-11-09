@@ -59,4 +59,7 @@ foreach ($m in $modules) {
         }
     }
 }
+# Die eine Client-Mod PeakVerse (enthaelt PeakCore-Mod und PeakSound-Mod)
+Write-Host '== PeakVerse-Mod (alles in einem Jar)'
+& (Join-Path $PSScriptRoot 'build-mod.ps1')
 Write-Host 'fertig'
