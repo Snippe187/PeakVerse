@@ -10,3 +10,7 @@ status:
   history-samples: 360   # ein Messpunkt alle 30 Sekunden
 chat:
   history: 300
+creative:
+  separate-inventory: true   # Creative hat ein eigenes Inventar; beim Wechsel wird das andere gesichert und wiederhergestellt
+itemlog:
+  keep: 2000                 # so viele Eintraege bleiben in der Web-Ansicht (die Datei itemlog.jsonl behaelt mehr)

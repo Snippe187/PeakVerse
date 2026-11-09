@@ -2,7 +2,7 @@
 export default async function mount(root, ctx) {
   const { h, t } = ctx;
   const L = (de, en) => t({ de, en });
-  let tab = 'players', players = [], q = '', cur = null, detail = null, advs = null, advQ = '', inv = 'inventory';
+  let tab = 'players', players = [], q = '', cur = null, detail = null, advs = null, advTab = null, inv = 'inventory';
   let lp = null, lpSel = null, lpQ = '', lpNode = '', consolePos = -1, consoleLines = [], chatLast = 0, chatMsgs = [], chatMutes = [], status = null, bk = null, cfg = null;
   const timers = [];
   const alive = () => root.isConnected;
@@ -22,9 +22,27 @@ export default async function mount(root, ctx) {
 .pa-list{max-height:70vh;overflow:auto}.pa-row{display:flex;gap:8px;align-items:center;padding:6px 8px;cursor:pointer;border:2px solid transparent}.pa-row:hover{background:var(--panel2)}.pa-row.sel{border-color:var(--accent)}
 .pa-dot{width:10px;height:10px;background:var(--dim)}.pa-dot.on{background:var(--good)}
 .pa-box{border:1px solid var(--line);padding:10px;margin:8px 0;display:grid;gap:8px}.pa-acts{display:flex;gap:6px;flex-wrap:wrap}
-.pa-slots{display:grid;grid-template-columns:repeat(9,1fr);gap:4px}@media(max-width:700px){.pa-slots{grid-template-columns:repeat(5,1fr)}}
-.pa-slot{border:1px solid var(--line);min-height:46px;padding:3px;font-size:11px;position:relative;background:var(--panel2);overflow:hidden}.pa-slot.full{cursor:pointer;border-color:var(--accent)}
-.pa-slot b{display:block;word-break:break-all}.pa-n{position:absolute;right:3px;bottom:1px;font-weight:bold}
+.pa-ic{image-rendering:pixelated;display:inline-block;vertical-align:middle;text-align:center;font-weight:bold}.pa-ic.ph{background:#555;color:#ddd}
+.mc-panel{background:#c6c6c6;border:4px solid;border-color:#fff #555 #555 #fff;padding:10px;display:inline-block;max-width:100%;overflow:auto;color:#404040;font-family:monospace}
+.mc-title{font-weight:bold;margin-bottom:6px;color:#404040}.mc-sub{font-size:11px;margin:8px 0 3px;color:#555}
+.mc-row{display:flex}.mc-top{display:flex;gap:18px;align-items:flex-start}.mc-col{display:flex;flex-direction:column}.mc-off{margin-top:0}
+.mc-slot{width:36px;height:36px;flex:none;background:#8b8b8b;border:2px solid;border-color:#373737 #fff #fff #373737;box-sizing:border-box;display:flex;align-items:center;justify-content:center;position:relative}
+.mc-slot.full{cursor:pointer}.mc-slot.full:hover{background:#a9a9c9;outline:2px solid #fff;outline-offset:-2px}
+.mc-slot.lab:empty::after{content:attr(data-label);font-size:8px;color:#444;text-align:center;line-height:1}
+.mc-n{position:absolute;right:1px;bottom:-1px;color:#fff;font-size:12px;font-weight:bold;text-shadow:1px 1px 0 #3f3f3f}
+.mc-dur{position:absolute;left:3px;bottom:2px;height:2px;pointer-events:none}
+.pa-tip{position:fixed;z-index:9999;pointer-events:none;background:#100010f0;border:2px solid #2a0a5e;border-radius:3px;padding:6px 9px;color:#fff;font:12px/1.4 monospace;max-width:320px;box-shadow:0 0 0 1px #000}
+.pa-tip .tn{font-weight:bold;color:#fff}.pa-tip .tn.ench{color:#5ff}.pa-tip .te{color:#a9a9a9}.pa-tip .tl{color:#b0b0e0;font-style:italic}.pa-tip .tg{color:#a9a9a9}
+.pa-tip .ti{color:#555;margin-top:4px;font-size:11px}.pa-tip .th{color:#5f5;margin-top:3px;font-size:11px}
+.pa-tip .adv-task{color:#fff}.pa-tip .adv-goal{color:#ffb454}.pa-tip .adv-challenge{color:#c77dff}
+.pa-prog{display:flex;align-items:center;gap:10px;margin:6px 0}.pa-prog-bar{flex:1;max-width:340px;height:10px;background:var(--panel2);border:1px solid var(--line)}.pa-prog-bar div{height:100%;background:var(--accent)}
+.pa-advtabs{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.pa-advtabs button{display:flex;align-items:center;gap:4px}
+.pa-advview{overflow:auto;max-height:60vh;background:#1e1e1e;border:2px solid #555;padding:4px}.pa-advcanvas{position:relative}
+.pa-lines{position:absolute;left:0;top:0;pointer-events:none}.pa-lines path{fill:none;stroke:#555;stroke-width:3}.pa-lines path.on{stroke:#e8e8e8}
+.pa-adv{position:absolute;width:44px;height:44px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;cursor:pointer;background:#303030;border:3px solid #6b6b6b;opacity:.55}
+.pa-adv.goal{border-radius:14px}.pa-adv.challenge{border-color:#8a5cc7;border-radius:4px;clip-path:polygon(10% 0,90% 0,100% 10%,100% 90%,90% 100%,10% 100%,0 90%,0 10%)}
+.pa-adv.done{opacity:1;background:#4a4a4a;border-color:#e8e8e8}.pa-adv.goal.done{border-color:#ffb454}.pa-adv.challenge.done{border-color:#c77dff}
+.pa-adv:hover{opacity:1;outline:2px solid #fff}
 .pa-con{background:#0b0b0b;color:#ddd;font:12px/1.35 monospace;height:60vh;overflow:auto;padding:8px;white-space:pre-wrap;word-break:break-all}
 .pa-chart{width:100%;height:110px;background:var(--panel2);border:1px solid var(--line)}.pa-stat{display:flex;gap:18px;flex-wrap:wrap}.pa-stat div{min-width:110px}.pa-stat b{font-size:20px;display:block}`;
     document.head.appendChild(st);
@@ -32,7 +50,55 @@ export default async function mount(root, ctx) {
 
   // ---------- Spieler ----------
   async function loadPlayers() { players = (await call('players')) || []; }
-  async function open(p) { cur = p; advs = null; detail = await call('player/' + p.uuid); render(); }
+  async function open(p) {
+    cur = p; advs = null; detail = await call('player/' + p.uuid); render();
+    if (detail && detail.online) { advs = await call('player/' + p.uuid + '/advancements'); if (cur === p) render(); }
+  }
+  // ---------- Item-Bilder (TexturePeak) und Tooltip ----------
+  let texInfo = null, textures = null; // texInfo: Antwort von /api/texturepeak/vanilla oder {missing:true}
+  async function loadTex() {
+    try {
+      const r = await fetch('/api/texturepeak/vanilla', { credentials: 'same-origin' });
+      if (!r.ok) { texInfo = { missing: true }; textures = null; return; }
+      texInfo = await r.json(); textures = texInfo.ready ? { item: new Set(texInfo.item), block: new Set(texInfo.block) } : null;
+    } catch { texInfo = { missing: true }; textures = null; }
+  }
+  async function downloadTex() {
+    texInfo = { busy: true }; render();
+    try { await fetch('/api/texturepeak/vanilla/download', { method: 'POST', headers: { 'X-Peak': '1' }, credentials: 'same-origin' }); } catch { /* unten geprueft */ }
+    for (let i = 0; i < 60; i++) { await new Promise(r => setTimeout(r, 2000)); await loadTex(); if (!texInfo.busy) break; }
+    render();
+  }
+  const pretty = id => id.replace(/^minecraft:/, '').split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+  function icon(name, size) {
+    const n = (name || '').replace(/^minecraft:/, '');
+    const kind = textures ? (textures.item.has(n) ? 'item' : textures.block.has(n) ? 'block' : null) : (texInfo === null ? 'item' : null);
+    const ph = () => h('span', { class: 'pa-ic ph', style: `width:${size}px;height:${size}px;line-height:${size}px;font-size:${Math.round(size / 2)}px` }, (n || '?')[0].toUpperCase());
+    if (!kind) return ph();
+    const img = h('img', { class: 'pa-ic', width: size, height: size, alt: '', draggable: 'false', src: '/api/texturepeak/vanilla/' + kind + '/' + encodeURIComponent(n) });
+    img.onerror = () => img.replaceWith(ph());
+    return img;
+  }
+  function texBanner() {
+    if (!texInfo || texInfo.ready) return null;
+    const msg = texInfo.missing ? L('Die Item-Bilder fehlen: Das Modul TexturePeak ist aus oder nicht erreichbar.', 'Item images missing: the TexturePeak module is off or unreachable.')
+      : texInfo.busy ? L('Die Minecraft-Bilder werden gerade geladen ...', 'Loading the Minecraft images ...')
+      : texInfo.error ? L('Laden der Bilder fehlgeschlagen: ', 'Loading images failed: ') + texInfo.error
+      : L('Die Minecraft-Bilder sind noch nicht geladen, deshalb siehst du Buchstaben statt Symbolen.', 'The Minecraft images are not loaded yet, so you see letters instead of icons.');
+    return h('div', { class: 'tag warn', style: 'display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:8px 0' }, h('span', {}, msg),
+      texInfo.missing || texInfo.busy ? null : h('button', { class: 'px-btn small primary', onclick: downloadTex }, L('Jetzt laden (einmalig)', 'Load now (once)')));
+  }
+  let tipEl = null;
+  function hideTip() { if (tipEl) { tipEl.remove(); tipEl = null; } }
+  function showTip(e, lines) {
+    if (!root.isConnected) { hideTip(); return; }
+    if (!tipEl) { tipEl = h('div', { class: 'pa-tip' }); document.body.appendChild(tipEl); }
+    tipEl.replaceChildren(...lines);
+    const w = tipEl.offsetWidth, hgt = tipEl.offsetHeight;
+    tipEl.style.left = Math.max(4, Math.min(e.clientX + 14, innerWidth - w - 6)) + 'px';
+    tipEl.style.top = Math.max(4, Math.min(e.clientY - 8, innerHeight - hgt - 6)) + 'px';
+  }
+  const withTip = (el, linesFn) => { el.onmousemove = e => showTip(e, linesFn()); el.onmouseleave = hideTip; return el; };
   async function act(a, body, ok, confirmText) {
     if (confirmText && !(await ctx.confirm(confirmText))) return;
     const r = await call('player/' + cur.uuid + '/' + a, body ?? {}, ok);
@@ -41,16 +107,84 @@ export default async function mount(root, ctx) {
     await loadPlayers(); render();
   }
   const btn = (label, fn, cls = '') => h('button', { class: 'px-btn small ' + cls, onclick: fn }, label);
-  function slotGrid(items, size) {
+  // Tooltip wie im Spiel: Name, Verzauberungen, Beschreibung, Haltbarkeit, technische ID
+  function itemTip(it) {
+    const lines = [h('div', { class: 'tn' + (it.enchants ? ' ench' : '') }, it.name || pretty(it.type))];
+    (it.enchants || []).forEach(e => lines.push(h('div', { class: 'te' }, pretty(e.replace(/ (\d+)$/, '')) + ' ' + (e.match(/ (\d+)$/) || ['', ''])[1])));
+    (it.lore || []).forEach(l => lines.push(h('div', { class: 'tl' }, l)));
+    if (it.maxDurability) lines.push(h('div', { class: 'tg' }, L('Haltbarkeit: ', 'Durability: ') + it.durability + ' / ' + it.maxDurability));
+    lines.push(h('div', { class: 'ti' }, it.type));
+    return lines;
+  }
+  function slotEl(it, slot, label) {
+    const el = h('div', { class: 'mc-slot' + (it ? ' full' : '') + (label ? ' lab' : ''), 'data-label': label || '',
+      onclick: it ? () => { hideTip(); act('remove-slot', { inv, slot }, L('Entfernt', 'Removed'), L('Gegenstand entfernen?', 'Remove item?') + ' ' + (it.name || pretty(it.type))); } : null },
+      it ? [icon(it.type, 32), it.amount > 1 ? h('span', { class: 'mc-n' }, it.amount) : null,
+        it.maxDurability && it.durability < it.maxDurability ? h('span', { class: 'mc-dur', style: `width:${Math.round(13 * it.durability / it.maxDurability)}px;background:hsl(${Math.round(120 * it.durability / it.maxDurability)},90%,45%)` }) : null] : null);
+    if (it) withTip(el, () => [...itemTip(it), h('div', { class: 'th' }, L('Klick: entfernen', 'Click: remove'))]);
+    return el;
+  }
+  // Aufbau wie im Spiel: Ruestung und Zweithand links, Rucksack 3x9, darunter die Hotbar
+  function mcInventory(items, which) {
     const by = new Map(items.map(i => [i.slot, i]));
-    const cells = [];
-    for (let s = 0; s < size; s++) {
-      const it = by.get(s);
-      cells.push(h('div', { class: 'pa-slot' + (it ? ' full' : ''), title: it ? [it.type, it.name, ...(it.enchants || [])].filter(Boolean).join('\n') + '\n' + L('Klick: entfernen', 'Click: remove') : '',
-        onclick: it ? () => act('remove-slot', { inv, slot: s }, L('Entfernt', 'Removed'), L('Gegenstand entfernen?', 'Remove item?') + ' ' + it.type) : null },
-        it ? [h('b', {}, it.name || it.type.replace('minecraft:', '')), h('span', { class: 'pa-n' }, it.amount > 1 ? it.amount : '')] : ''));
+    const s = n => slotEl(by.get(n), n);
+    if (which === 'ender') {
+      const rows = [];
+      for (let r = 0; r < 3; r++) rows.push(h('div', { class: 'mc-row' }, [...Array(9).keys()].map(c => s(r * 9 + c))));
+      return h('div', { class: 'mc-panel' }, h('div', { class: 'mc-title' }, L('Endertruhe', 'Ender chest')), rows);
     }
-    return h('div', { class: 'pa-slots' }, cells);
+    const main = [];
+    for (let r = 0; r < 3; r++) main.push(h('div', { class: 'mc-row' }, [...Array(9).keys()].map(c => s(9 + r * 9 + c))));
+    const armor = [[39, L('Kopf', 'Head')], [38, L('Brust', 'Chest')], [37, L('Beine', 'Legs')], [36, L('Füße', 'Feet')]];
+    return h('div', { class: 'mc-panel' },
+      h('div', { class: 'mc-title' }, L('Inventar', 'Inventory')),
+      h('div', { class: 'mc-top' }, h('div', { class: 'mc-col' }, armor.map(([n, l]) => slotEl(by.get(n), n, l))),
+        h('div', { class: 'mc-col mc-off' }, slotEl(by.get(40), 40, L('Zweithand', 'Offhand')))),
+      h('div', { class: 'mc-sub' }, L('Rucksack', 'Backpack')), main,
+      h('div', { class: 'mc-sub' }, L('Hotbar', 'Hotbar')), h('div', { class: 'mc-row' }, [...Array(9).keys()].map(c => s(c))));
+  }
+  // ---------- Fortschritte: Baum wie im Spiel, Klick auf einen Knoten vergibt oder entzieht ----------
+  const FRAME = { task: L('Aufgabe', 'Task'), goal: L('Ziel', 'Goal'), challenge: L('Herausforderung', 'Challenge') };
+  function advTree() {
+    if (!advs) return h('div', { class: 'sub' }, L('Fortschritte werden geladen ...', 'Loading advancements ...'));
+    const map = new Map(advs.map(a => [a.key, a])), kids = new Map();
+    advs.forEach(a => { if (a.parent && map.has(a.parent)) { if (!kids.has(a.parent)) kids.set(a.parent, []); kids.get(a.parent).push(a); } });
+    const roots = advs.filter(a => !a.parent || !map.has(a.parent));
+    const countDone = a => (a.done ? 1 : 0) + (kids.get(a.key) || []).reduce((s, k) => s + countDone(k), 0);
+    const countAll = a => 1 + (kids.get(a.key) || []).reduce((s, k) => s + countAll(k), 0);
+    const total = advs.length, done = advs.filter(a => a.done).length;
+    if (!advTab || !map.has(advTab)) advTab = roots[0] && roots[0].key;
+    const root0 = map.get(advTab);
+    const nodes = [], lines = [];
+    let nextRow = 0, maxDepth = 0;
+    (function place(a, depth) {
+      maxDepth = Math.max(maxDepth, depth);
+      const ch = kids.get(a.key) || [];
+      let row;
+      if (!ch.length) row = nextRow++;
+      else { const rs = ch.map(c => place(c, depth + 1)); row = (rs[0] + rs[rs.length - 1]) / 2; }
+      nodes.push({ a, depth, row });
+      return row;
+    })(root0, 0);
+    const pos = new Map(nodes.map(n => [n.a.key, n]));
+    const CW = 76, CH = 64, PAD = 36;
+    nodes.forEach(n => (kids.get(n.a.key) || []).forEach(c => {
+      const p = pos.get(n.a.key), q = pos.get(c.key), x1 = PAD + p.depth * CW, y1 = PAD + p.row * CH, x2 = PAD + q.depth * CW, y2 = PAD + q.row * CH, mx = (x1 + x2) / 2;
+      lines.push(`<path d="M${x1} ${y1}H${mx}V${y2}H${x2}" class="${c.done ? 'on' : ''}"/>`);
+    }));
+    const svg = h('div', { class: 'pa-lines' }); svg.innerHTML = `<svg width="${PAD * 2 + maxDepth * CW}" height="${PAD * 2 + Math.max(0, nextRow - 1) * CH}">${lines.join('')}</svg>`;
+    const el = n => {
+      const a = n.a;
+      const d = h('div', { class: 'pa-adv ' + a.frame + (a.done ? ' done' : ''), style: `left:${PAD + n.depth * CW - 22}px;top:${PAD + n.row * CH - 22}px`,
+        onclick: () => { hideTip(); act('advancement', { key: a.key, grant: !a.done }, a.done ? L('Entzogen', 'Revoked') : L('Vergeben', 'Granted')); } }, icon(a.icon, 28));
+      return withTip(d, () => [h('div', { class: 'tn adv-' + a.frame }, a.title), h('div', { class: 'tl' }, a.description), h('div', { class: 'tg' }, (FRAME[a.frame] || a.frame) + ' · ' + (a.done ? L('erreicht', 'done') : L('nicht erreicht', 'not done'))),
+        h('div', { class: 'th' }, a.done ? L('Klick: entziehen', 'Click: revoke') : L('Klick: vergeben', 'Click: grant'))]);
+    };
+    return h('div', {},
+      h('div', { class: 'pa-prog' }, h('div', { class: 'pa-prog-bar' }, h('div', { style: `width:${total ? Math.round(100 * done / total) : 0}%` })), h('b', {}, done + ' / ' + total), h('span', { class: 'sub' }, L('Fortschritte erreicht', 'advancements done'))),
+      h('div', { class: 'pa-advtabs' }, roots.map(r => h('button', { class: 'px-btn small' + (r.key === advTab ? ' primary' : ''), onclick: () => { advTab = r.key; render(); } }, icon(r.icon, 18), ' ', r.title, ' ', h('span', { class: 'sub' }, countDone(r) + '/' + countAll(r))))),
+      h('div', { class: 'pa-advview' }, h('div', { class: 'pa-advcanvas', style: `width:${PAD * 2 + maxDepth * CW}px;height:${PAD * 2 + Math.max(0, nextRow - 1) * CH}px` }, svg, nodes.map(el))),
+      h('div', { class: 'sub' }, L('Hell = erreicht. Maus darüber: Beschreibung. Klick: vergeben oder entziehen.', 'Bright = done. Hover for the description. Click to grant or revoke.')));
   }
   function playerView() {
     if (!cur || !detail) return h('div', { class: 'sub' }, L('Links einen Spieler waehlen.', 'Pick a player on the left.'));
@@ -59,15 +193,6 @@ export default async function mount(root, ctx) {
     const item = h('input', { class: 'px-input', placeholder: 'minecraft:diamond' }), amount = h('input', { class: 'px-input', type: 'number', value: 1, min: 1, style: 'width:90px' });
     const lvl = h('input', { class: 'px-input', type: 'number', value: d.level ?? 0, style: 'width:90px' });
     const gm = h('select', { class: 'px-input' }, ['survival', 'creative', 'adventure', 'spectator'].map(m => h('option', { value: m, selected: m === d.gamemode }, m)));
-    const advBox = h('div', {});
-    if (advs) {
-      const f = advQ.toLowerCase();
-      const list = advs.filter(a => !f || a.key.includes(f)).slice(0, 150);
-      advBox.append(h('input', { class: 'px-input', placeholder: L('Fortschritte suchen...', 'Search advancements...'), value: advQ, oninput: e => { advQ = e.target.value; render(); } }),
-        h('div', { class: 'sub' }, advs.filter(a => a.done).length + ' / ' + advs.length + ' ' + L('erreicht', 'done')),
-        list.map(a => h('div', { class: 'row' }, h('span', { class: 'tag' + (a.done ? '' : ' warn') }, a.done ? '✓' : '–'), h('span', {}, a.key),
-          a.done ? btn(L('Entziehen', 'Revoke'), () => act('advancement', { key: a.key, grant: false }, L('Entzogen', 'Revoked'))) : btn(L('Vergeben', 'Grant'), () => act('advancement', { key: a.key, grant: true }, L('Vergeben', 'Granted'))))));
-    }
     return h('div', {},
       h('h3', {}, d.name, ' ', h('span', { class: 'tag' + (on ? '' : ' warn') }, on ? 'online' : 'offline'), d.op ? h('span', { class: 'tag' }, 'OP') : null, d.banned ? h('span', { class: 'tag warn' }, L('gebannt', 'banned')) : null, d.muted ? h('span', { class: 'tag warn' }, L('stumm', 'muted')) : null),
       h('div', { class: 'sub' }, d.uuid + ' · ' + L('zuletzt', 'last seen') + ' ' + when(d.lastSeen)),
@@ -85,13 +210,10 @@ export default async function mount(root, ctx) {
       on ? h('div', { class: 'pa-box' },
         h('div', { class: 'pa-acts' }, btn(L('Inventar', 'Inventory'), () => { inv = 'inventory'; render(); }, inv === 'inventory' ? 'primary' : ''), btn(L('Endertruhe', 'Ender chest'), () => { inv = 'ender'; render(); }, inv === 'ender' ? 'primary' : ''),
           btn(L('Alles leeren', 'Clear all'), () => act('clear', { inv }, L('Geleert', 'Cleared'), L('Dieses Inventar komplett leeren?', 'Clear this inventory completely?')), 'danger')),
-        slotGrid(inv === 'ender' ? d.ender : d.inventory, inv === 'ender' ? 27 : 41),
-        h('div', { class: 'sub' }, inv === 'inventory' ? L('Plaetze 0-8 Hotbar, 9-35 Rucksack, 36-39 Ruestung (Fuesse bis Kopf), 40 Zweithand.', 'Slots 0-8 hotbar, 9-35 main, 36-39 armor (feet to head), 40 offhand.') : ''),
+        texBanner(), mcInventory(inv === 'ender' ? d.ender : d.inventory, inv),
+        h('div', { class: 'sub' }, L('Maus über einen Gegenstand: Informationen. Klick: entfernen.', 'Hover an item for details. Click to remove it.')),
         h('div', { class: 'pa-acts' }, item, amount, btn(L('Geben', 'Give'), () => act('give', { inv, item: item.value, amount: +amount.value }, L('Gegeben', 'Given'))))) : null,
-      on ? h('div', { class: 'pa-box' }, h('div', { class: 'pa-acts' }, h('b', {}, L('Fortschritte', 'Advancements')),
-          btn(L('Anzeigen / laden', 'Show / load'), async () => { advs = await call('player/' + cur.uuid + '/advancements'); render(); }),
-          btn(L('Alle vergeben', 'Grant all'), () => act('advancement', { key: '*', grant: true }, 'OK', L('ALLE Fortschritte vergeben?', 'Grant ALL advancements?'))),
-          btn(L('Alle entziehen', 'Revoke all'), () => act('advancement', { key: '*', grant: false }, 'OK', L('ALLE Fortschritte entziehen?', 'Revoke ALL advancements?')), 'danger')), advBox) : null,
+      on ? h('div', { class: 'pa-box' }, h('b', {}, L('Fortschritte', 'Advancements')), advTree()) : null,
       h('div', { class: 'sub' }, L('Rollen, Rechte, Notizen und Verwarnungen: Reiter "Spieler".', 'Roles, permissions, notes and warnings: tab "Players".')));
   }
   function playersTab() {
@@ -195,19 +317,35 @@ export default async function mount(root, ctx) {
           h('input', { class: 'px-input', placeholder: L('Rechte filtern...', 'Filter permissions...'), value: lpQ, oninput: e => { lpQ = e.target.value; render(); } }),
           g.permissions.filter(p => !lpQ || p.key.includes(lpQ)).map(p => h('div', { class: 'row' }, h('span', { class: 'tag' + (p.value ? '' : ' warn') }, p.value ? L('erlaubt', 'allow') : L('verboten', 'deny')), h('span', {}, p.key), btn(L('Umschalten', 'Toggle'), () => lpDo({ action: 'perm', group: g.name, key: p.key, value: !p.value })), btn(L('Entfernen', 'Remove'), () => lpDo({ action: 'perm', group: g.name, key: p.key, value: null }), 'ghost'))))) : h('div', { class: 'sub' }, L('Gruppe waehlen oder anlegen.', 'Pick or create a group.')));
   }
+  // ---------- Item-Log ----------
+  let ilog = [], ilPlayer = '', ilSource = '';
+  const SRC = { creative: L('Creative-Menü', 'Creative menu'), 'creative-drop': L('Creative: gedroppt', 'Creative: dropped'), 'creative-container': L('Creative: in Behälter', 'Creative: into container'), command: L('Befehl', 'Command'), 'web-give': L('Web: gegeben', 'Web: given'), 'mode-switch': L('Moduswechsel', 'Mode switch') };
+  async function loadLog() { ilog = (await call('itemlog?limit=500' + (ilPlayer ? '&player=' + encodeURIComponent(ilPlayer) : '') + (ilSource ? '&source=' + encodeURIComponent(ilSource) : ''))) || []; if (!Array.isArray(ilog)) ilog = []; }
+  function logTab() {
+    return h('div', {}, h('div', { class: 'pa-box' },
+      h('div', { class: 'pa-acts' },
+        h('input', { class: 'px-input', placeholder: L('Spieler', 'Player'), value: ilPlayer, onchange: async e => { ilPlayer = e.target.value; await loadLog(); render(); } }),
+        h('select', { class: 'px-input', onchange: async e => { ilSource = e.target.value; await loadLog(); render(); } },
+          [['', L('Alle Quellen', 'All sources')], ...Object.entries(SRC)].map(([k, v]) => h('option', { value: k, selected: k === ilSource }, v))),
+        btn(L('Neu laden', 'Reload'), async () => { await loadLog(); render(); })),
+      h('div', { class: 'sub' }, L('Items aus dem Creative-Menü, per Befehl (give/item/summon), gedroppt oder in Behälter gelegt im Creative-Modus.', 'Items from the creative menu, by command (give/item/summon), dropped or put into containers in creative mode.')),
+      ilog.length ? ilog.map(e => h('div', { class: 'row' }, h('span', { class: 'sub' }, when(e.time)), h('b', {}, e.player), h('span', { class: 'tag' }, SRC[e.source] || e.source),
+        h('span', {}, e.item + (e.amount ? ' ×' + e.amount : '')), h('span', { class: 'sub' }, e.detail || ''))) : h('div', { class: 'sub' }, L('Noch keine Einträge.', 'No entries yet.'))));
+  }
   // ---------- Rahmen ----------
-  const TABS = [['players', L('Spieler', 'Players')], ['console', L('Konsole', 'Console')], ['status', 'Status'], ['chat', 'Chat'], ['perms', L('Rechte (LuckPerms)', 'Permissions (LuckPerms)')], ['backups', L('Sicherungen & Neustart', 'Backups & restart')]];
+  const TABS = [['players', L('Spieler', 'Players')], ['console', L('Konsole', 'Console')], ['status', 'Status'], ['chat', 'Chat'], ['perms', L('Rechte (LuckPerms)', 'Permissions (LuckPerms)')], ['itemlog', L('Item-Log', 'Item log')], ['backups', L('Sicherungen & Neustart', 'Backups & restart')]];
   function render() {
-    const body = tab === 'players' ? playersTab() : tab === 'console' ? consoleTab() : tab === 'status' ? statusTab() : tab === 'chat' ? chatTab() : tab === 'perms' ? permsTab() : backupsTab();
+    const body = tab === 'players' ? playersTab() : tab === 'console' ? consoleTab() : tab === 'status' ? statusTab() : tab === 'chat' ? chatTab() : tab === 'perms' ? permsTab() : tab === 'itemlog' ? logTab() : backupsTab();
     root.replaceChildren(h('div', { class: 'page' }, h('div', { class: 'pa-tabs' }, TABS.map(([id, label]) => h('button', { class: 'px-btn small' + (tab === id ? ' on' : ''), onclick: () => go(id) }, label))), body));
   }
   async function go(id) {
     tab = id;
-    if (id === 'players') await loadPlayers(); else if (id === 'status') status = await call('status'); else if (id === 'backups') await loadBackups(); else if (id === 'perms') await loadLp();
+    if (id === 'players') await loadPlayers(); else if (id === 'status') status = await call('status'); else if (id === 'backups') await loadBackups(); else if (id === 'perms') await loadLp(); else if (id === 'itemlog') await loadLog();
     else if (id === 'console') { await pollConsole(); } else if (id === 'chat') await pollChat();
     render();
   }
   every(() => { if (tab === 'console') pollConsole(); else if (tab === 'chat') pollChat(); else if (tab === 'status') call('status').then(r => { if (r) { status = r; render(); } }); }, 3000);
   ctx.on(() => { if (tab === 'players') loadPlayers().then(render); else if (tab === 'backups') loadBackups().then(render); });
+  await loadTex();
   await go('players');
 }

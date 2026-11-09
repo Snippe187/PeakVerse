@@ -25,6 +25,7 @@ public final class PeakAdminModule implements PeakModule, Listener {
     private ChatLog chat;
     private MuteStore mutes;
     private ServerControl control;
+    private ItemGuard guard;
     private BukkitTask sampler;
     private BukkitTask minuteTask;
     private long lastBackup = System.currentTimeMillis();
@@ -48,14 +49,16 @@ public final class PeakAdminModule implements PeakModule, Listener {
         chat = new ChatLog(Math.max(50, context.config().getInt("chat.history", 300)));
         mutes = new MuteStore(data.toPath().resolve("mutes.json"));
         control = new ServerControl(context.host(), context.logger(), new BackupStore(backupFolder()));
+        guard = new ItemGuard(data.toPath(), context.logger(), context.config().getBoolean("creative.separate-inventory", true), context.config().getInt("itemlog.keep", 2000));
         Bukkit.getPluginManager().registerEvents(this, context.host());
+        Bukkit.getPluginManager().registerEvents(guard, context.host());
         sampler = Bukkit.getScheduler().runTaskTimer(context.host(), this::sample, 100L, 600L);
         minuteTask = Bukkit.getScheduler().runTaskTimer(context.host(), this::everyMinute, 1200L, 1200L);
         if (context.web().enabled()) {
             try (java.io.InputStream in = PeakAdminModule.class.getResourceAsStream("/modules/peakadmin/panel.js")) {
                 if (in == null) throw new IOException("panel.js fehlt im Jar");
                 Path log = Path.of("logs", "latest.log");
-                new AdminWeb(context.web(), stats, chat, mutes, new LogTail(log), control, new AdminWeb.Settings() {
+                new AdminWeb(context.web(), stats, chat, mutes, new LogTail(log), control, guard, new AdminWeb.Settings() {
                     @Override
                     public JsonObject get() {
                         JsonObject o = new JsonObject();

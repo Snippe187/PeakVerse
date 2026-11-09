@@ -126,6 +126,19 @@ public final class PlayerTools {
         o.addProperty("type", s.getType().getKey().toString());
         o.addProperty("amount", s.getAmount());
         if (s.hasItemMeta() && s.getItemMeta().hasDisplayName()) o.addProperty("name", PLAIN.serialize(s.getItemMeta().displayName()));
+        if (s.hasItemMeta()) {
+            var meta = s.getItemMeta();
+            var lore = meta.lore();
+            if (lore != null && !lore.isEmpty()) {
+                JsonArray l = new JsonArray();
+                for (var c : lore) l.add(PLAIN.serialize(c));
+                o.add("lore", l);
+            }
+            if (meta instanceof org.bukkit.inventory.meta.Damageable d && d.hasDamage() && s.getType().getMaxDurability() > 0) {
+                o.addProperty("durability", s.getType().getMaxDurability() - d.getDamage());
+                o.addProperty("maxDurability", (int) s.getType().getMaxDurability());
+            }
+        }
         JsonArray ench = new JsonArray();
         for (Map.Entry<Enchantment, Integer> e : s.getEnchantments().entrySet()) ench.add(e.getKey().getKey() + " " + e.getValue());
         if (!ench.isEmpty()) o.add("enchants", ench);
@@ -229,6 +242,14 @@ public final class PlayerTools {
             AdvancementProgress pr = p.getAdvancementProgress(adv);
             JsonObject o = new JsonObject();
             o.addProperty("key", key);
+            var disp = adv.getDisplay();
+            if (disp == null) continue;   // ohne Anzeige (technische Fortschritte) nicht auflisten
+            o.addProperty("title", PLAIN.serialize(disp.title()));
+            o.addProperty("description", PLAIN.serialize(disp.description()));
+            o.addProperty("icon", disp.icon().getType().getKey().getKey());
+            o.addProperty("frame", disp.frame().name().toLowerCase(Locale.ROOT));
+            var parent = adv.getParent();
+            o.addProperty("parent", parent == null ? "" : parent.getKey().toString());
             o.addProperty("done", pr.isDone());
             o.addProperty("criteria", adv.getCriteria().size());
             o.addProperty("remaining", pr.getRemainingCriteria().size());
@@ -237,20 +258,14 @@ public final class PlayerTools {
         return a;
     }
 
-    /** Vergibt oder entzieht einen Fortschritt ({@code key == "*"}: alle ausser Rezepten). Liefert die Zahl der geaenderten. */
+    /** Vergibt oder entzieht einen einzelnen Fortschritt. Liefert die Zahl der geaenderten (0 oder 1). */
     public static int advancement(UUID id, String key, boolean grant) {
         Player p = online(id);
         List<Advancement> targets = new ArrayList<>();
-        if (key.equals("*")) {
-            Bukkit.advancementIterator().forEachRemaining(a -> {
-                if (!a.getKey().getKey().startsWith("recipes/")) targets.add(a);
-            });
-        } else {
-            NamespacedKey nk = NamespacedKey.fromString(key.toLowerCase(Locale.ROOT));
-            Advancement adv = nk == null ? null : Bukkit.getAdvancement(nk);
-            if (adv == null) throw new IllegalArgumentException("Unbekannter Fortschritt: " + key);
-            targets.add(adv);
-        }
+        NamespacedKey nk = NamespacedKey.fromString(key.toLowerCase(Locale.ROOT));
+        Advancement adv = nk == null ? null : Bukkit.getAdvancement(nk);
+        if (adv == null) throw new IllegalArgumentException("Unbekannter Fortschritt: " + key);
+        targets.add(adv);
         int changed = 0;
         for (Advancement a : targets) {
             AdvancementProgress pr = p.getAdvancementProgress(a);

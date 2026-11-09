@@ -197,10 +197,17 @@ public final class PeakWarpsModule implements PeakModule, CommandExecutor, TabCo
                     sender.sendMessage("Nur Operatoren im Spiel.");
                     return true;
                 }
-                if (a.length < 1 || !WarpStore.validName(a[0].toLowerCase(Locale.ROOT))) {
-                    sender.sendMessage("/setwarp <name>  (a-z, 0-9, _ und -, bis 24 Zeichen)");
+                // Klammern wie in "/setwarp [Name]" und Leerzeichen im Namen werden verziehen
+                String raw = String.join("_", a).replaceAll("[\\[\\]<>]", "").toLowerCase(Locale.ROOT);
+                if (raw.isEmpty()) {
+                    sender.sendMessage("Benutzung: /setwarp <name>  (setzt den Warp an deiner Position)");
                     return true;
                 }
+                if (!WarpStore.validName(raw)) {
+                    sender.sendMessage("Ungueltiger Name '" + raw + "'. Erlaubt: a-z, 0-9, _ und -, bis 24 Zeichen (keine Umlaute).");
+                    return true;
+                }
+                a = new String[] {raw};
                 WarpStore.Warp w = new WarpStore.Warp();
                 Location l = p.getLocation();
                 w.name = a[0].toLowerCase(Locale.ROOT);

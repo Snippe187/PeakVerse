@@ -30,8 +30,10 @@ public final class AdminWeb {
     private final LogTail logTail;
     private final ServerControl control;
     private final Settings settings;
+    private final ItemGuard guard;
 
-    public AdminWeb(WebRegistry web, StatsHistory stats, ChatLog chat, MuteStore mutes, LogTail logTail, ServerControl control, Settings settings) {
+    public AdminWeb(WebRegistry web, StatsHistory stats, ChatLog chat, MuteStore mutes, LogTail logTail, ServerControl control, ItemGuard guard, Settings settings) {
+        this.guard = guard;
         this.web = web;
         this.stats = stats;
         this.chat = chat;
@@ -57,6 +59,12 @@ public final class AdminWeb {
         web.route("backups", r -> main(() -> WebResponse.json(backups().toString())));
         web.route("backups/create", this::backupCreate);
         web.route("backups/delete", this::backupDelete);
+        web.route("itemlog", r -> {
+            var q = r.query();
+            int limit = 300;
+            try { limit = Math.max(1, Math.min(1000, Integer.parseInt(q.getOrDefault("limit", "300")))); } catch (NumberFormatException ignored) { }
+            return WebResponse.json(guard.entries(q.get("player"), q.get("source"), limit).toString());
+        });
         web.route("restart", this::restart);
         web.route("settings", this::settings);
         web.route("lp", r -> main(() -> {
@@ -209,7 +217,10 @@ public final class AdminWeb {
                     requireOp(r);
                     PlayerTools.clear(id, str(o, "inv"));
                 }
-                case "give" -> PlayerTools.give(id, str(o, "inv"), str(o, "item"), num(o, "amount", 1));
+                case "give" -> {
+                    PlayerTools.give(id, str(o, "inv"), str(o, "item"), num(o, "amount", 1));
+                    guard.log(name, id, "web-give", str(o, "item"), num(o, "amount", 1), "von " + r.admin());
+                }
                 case "advancement" -> {
                     int n = PlayerTools.advancement(id, str(o, "key"), o.get("grant").getAsBoolean());
                     JsonObject res = new JsonObject();
