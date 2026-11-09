@@ -29,6 +29,18 @@ commands:
     usage: /peakenchants <list|info|book|apply>
     permission: peakcore.admin
     aliases: [pench]
+  warp:
+    description: Zu einem Warp-Punkt teleportieren
+    usage: /warp <name>
+  warps:
+    description: Alle Warps anzeigen, die du benutzen darfst
+    usage: /warps
+  setwarp:
+    description: Warp an deiner Position setzen (Operatoren)
+    usage: /setwarp <name>
+  delwarp:
+    description: Warp loeschen (Operatoren)
+    usage: /delwarp <name>
   peaksoundvote:
     description: Abstimmen, den laufenden Song der Jukebox in deiner Naehe zu ueberspringen
     usage: /peaksoundvote
@@ -41,6 +53,9 @@ permissions:
     default: true
   peakcore.admin:
     description: PeakCore-Befehle und Verwaltung
+    default: op
+  peakwarps.admin:
+    description: Warps setzen, loeschen und ohne Wartezeit benutzen
     default: op
   peaksound.upload:
     description: Eigene Songs hochladen

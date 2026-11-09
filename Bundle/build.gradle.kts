@@ -23,6 +23,7 @@ dependencies {
     implementation("de.peakverse:peakachievements")
     implementation("de.peakverse:peakenchants")
     implementation("de.peakverse:peakadmin")
+    implementation("de.peakverse:peakwarps")
 
     testImplementation("org.yaml:snakeyaml:2.4")
     testImplementation(platform("org.junit:junit-bom:5.11.4"))
