@@ -1,0 +1,36 @@
+package de.peakverse.peakregions;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import de.peakverse.core.api.ModuleInfo;
+import de.peakverse.core.api.module.PeakModule;
+import java.util.ServiceLoader;
+import org.junit.jupiter.api.Test;
+
+/** Schuetzt die Grundregeln eines Moduls: gueltige ID, ServiceLoader-Eintrag, Standard-Config im Jar. Weitere Tests des Moduls hier ergaenzen. */
+class PeakRegionsModuleTest {
+    @Test
+    void idIsValidForPeakCore() {
+        PeakRegionsModule module = new PeakRegionsModule();
+        new ModuleInfo(module.id(), module.displayName(), "0.1.0", 1); // wirft bei ungueltiger ID
+    }
+
+    @Test
+    void isFoundByTheServiceLoader() {
+        boolean found = ServiceLoader.load(PeakModule.class).stream().anyMatch(p -> p.type() == PeakRegionsModule.class);
+        assertTrue(found, "META-INF/services/de.peakverse.core.api.module.PeakModule fehlt oder nennt die Klasse nicht");
+    }
+
+    @Test
+    void defaultConfigIsAtTheModulePath() {
+        assertNotNull(getClass().getResource("/modules/" + new PeakRegionsModule().id() + "/config.yml"));
+    }
+
+    @Test
+    void disableWithoutEnableIsSafe() {
+        new PeakRegionsModule().disable();
+        assertEquals("peakregions", new PeakRegionsModule().id());
+    }
+}

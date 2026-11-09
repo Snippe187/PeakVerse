@@ -26,7 +26,7 @@ if ($Beta) {
 $out = Join-Path $root "dist\release\$version"
 
 # Fuer eine Beta werden die Versionsnummern nur fuers Bauen getauscht und danach wieder zurueckgesetzt
-$versionFiles = @('Bundle\gradle.properties', 'PeakCore\gradle.properties', 'PeakSound\gradle.properties', 'TexturePeak\build.gradle.kts', 'PeakBoard\build.gradle.kts', 'PeakAchievements\build.gradle.kts', 'PeakEnchants\build.gradle.kts', 'PeakAdmin\build.gradle.kts', 'PeakWarps\build.gradle.kts') | ForEach-Object { Join-Path $root $_ }
+$versionFiles = @('Bundle\gradle.properties', 'PeakCore\gradle.properties', 'PeakSound\gradle.properties', 'TexturePeak\build.gradle.kts', 'PeakBoard\build.gradle.kts', 'PeakAchievements\build.gradle.kts', 'PeakEnchants\build.gradle.kts', 'PeakAdmin\build.gradle.kts', 'PeakWarps\build.gradle.kts', 'PeakRegions\build.gradle.kts') | ForEach-Object { Join-Path $root $_ }
 $saved = @{}
 try {
     if ($Beta) {
@@ -74,9 +74,9 @@ function Get-Section([string]$file, [string]$version) {
 }
 $notes = "# PeakVerse $version`n`n"
 if ($Beta) { $notes += "> **Beta zum Testen.** Das ist eine Vorab-Version: es kann Fehler geben, am besten zuerst nicht auf dem Haupt-Server ausprobieren. Normale Updates (update.enabled) bieten sie nicht an. Installieren: im Spiel ``/peakcore update beta`` und dann auf [Ja, Beta laden] klicken, danach neu starten. Die Mods fuer Spieler muessen von Hand getauscht werden.`n`n" }
-$notes += "Dateien:`n- **PeakCore-$version.jar**: Server-Plugin (Paper, Minecraft 26.2) mit allen Modulen: PeakSound, TexturePeak, PeakBoard, PeakAchievements, PeakEnchants, PeakAdmin, PeakWarps`n- **PeakVerse-Mod-$version.jar**: die eine Fabric-Mod fuer Spieler (enthaelt PeakCore-Mod und PeakSound-Mod; braucht die Fabric API). Alte Einzel-Jars PeakCore-Mod und PeakSound-Mod aus dem mods-Ordner loeschen.`n- jede Datei mit einer .sha256-Pruefsumme`n`n"
+$notes += "Dateien:`n- **PeakCore-$version.jar**: Server-Plugin (Paper, Minecraft 26.2) mit allen Modulen: PeakSound, TexturePeak, PeakBoard, PeakAchievements, PeakEnchants, PeakAdmin, PeakWarps, PeakRegions`n- **PeakVerse-Mod-$version.jar**: die eine Fabric-Mod fuer Spieler (enthaelt PeakCore-Mod und PeakSound-Mod; braucht die Fabric API). Alte Einzel-Jars PeakCore-Mod und PeakSound-Mod aus dem mods-Ordner loeschen.`n- jede Datei mit einer .sha256-Pruefsumme`n`n"
 $notes += "Update auf dem Server: in der PeakCore-config.yml ``update.enabled: true`` setzen; die Web-Oberflaeche zeigt dann diese Version an.`n`n"
-foreach ($m in 'PeakCore', 'PeakSound', 'TexturePeak', 'PeakBoard', 'PeakAchievements', 'PeakEnchants', 'PeakAdmin', 'PeakWarps') {
+foreach ($m in 'PeakCore', 'PeakSound', 'TexturePeak', 'PeakBoard', 'PeakAchievements', 'PeakEnchants', 'PeakAdmin', 'PeakWarps', 'PeakRegions') {
     $s = Get-Section (Join-Path $root "$m\CHANGELOG.md") $version
     if ($s) { $notes += "## $m`n$s`n`n" }
 }

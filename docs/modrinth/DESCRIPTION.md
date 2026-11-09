@@ -13,6 +13,7 @@
 - **TexturePeak** - custom item textures with pixel editor, edit vanilla textures, item abilities.
 - **PeakBoard** - scoreboards, tab list and team editor with live preview and per-player sidebars.
 - **PeakAchievements** - custom achievements as real advancements with rewards, plus an editor for all advancements.
+- **PeakRegions** - WorldGuard regions and flags plus WorldEdit schematics in the web interface, regions on SquareMap.
 - **PeakEnchants** - manage datapack enchantment addons (for example Enchantology) and edit, create and hand out enchantments from the web.
 
 **Client mod `PeakVerse-Mod-<version>.jar`** (Fabric) - one jar for players. It only activates features that the server offers; on other servers it does nothing. Needs the Fabric API.
