@@ -25,6 +25,7 @@ dependencies {
     implementation("de.peakverse:peakadmin")
     implementation("de.peakverse:peakwarps")
     implementation("de.peakverse:peakregions")
+    implementation("de.peakverse:peakstats")
 
     testImplementation("org.yaml:snakeyaml:2.4")
     testImplementation(platform("org.junit:junit-bom:5.11.4"))

@@ -19,6 +19,7 @@ $modules = @(
     @{ Name = 'PeakAdmin' },
     @{ Name = 'PeakWarps' },
     @{ Name = 'PeakRegions' },
+    @{ Name = 'PeakStats' },
     @{ Name = 'Bundle';    Plugin = 'build\libs'; Dist = 'PeakCore'; JarPrefix = 'PeakCore' }   # zuletzt: braucht die Module
 )
 

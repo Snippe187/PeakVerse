@@ -1,0 +1,4 @@
+# PeakStats: Statistik
+afk-seconds: 300    # so lange ohne Bewegung oder Blickbewegung zaehlt die Zeit als AFK
+save-seconds: 60    # so oft werden die gesammelten Werte in die Datenbank geschrieben (beim Beenden immer)
+event-days: 90      # Einzelereignisse (Logins, Tode, Kills) so lange behalten; die Tageswerte bleiben
