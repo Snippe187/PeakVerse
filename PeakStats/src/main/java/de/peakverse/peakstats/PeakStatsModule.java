@@ -37,7 +37,7 @@ public final class PeakStatsModule implements PeakModule {
         collector = new StatsCollector(context.host(), db, context.logger(), context.config().getInt("afk-seconds", 300),
                 context.config().getInt("event-days", 90));
         Bukkit.getPluginManager().registerEvents(collector, context.host());
-        collector.start(context.config().getInt("save-seconds", 60));
+        collector.start();
         if (context.web().enabled()) {
             try (java.io.InputStream in = PeakStatsModule.class.getResourceAsStream("/modules/peakstats/panel.js")) {
                 if (in == null) throw new IOException("panel.js fehlt im Jar");

@@ -58,7 +58,9 @@ public final class StatsCollector implements Listener {
     private final List<StatsDb.Event> pendingEvents = new ArrayList<>();
     private final Map<UUID, Track> tracks = new HashMap<>();
     private final Map<Long, long[]> placed = new HashMap<>();   // Blockposition -> {Spieler-UUID most, least, Zeit}
-    private BukkitTask sampler, flusher;
+    private BukkitTask sampler;
+    private boolean flushQueued;
+    private volatile long lastPrune;
 
     public StatsCollector(Plugin host, StatsDb db, Logger log, int afkSeconds, int eventDays) {
         this.host = host;
@@ -68,16 +70,13 @@ public final class StatsCollector implements Listener {
         this.eventDays = Math.max(1, eventDays);
     }
 
-    public void start(int flushSeconds) {
+    public void start() {
         sampler = host.getServer().getScheduler().runTaskTimer(host, this::sample, SAMPLE_TICKS, SAMPLE_TICKS);
-        long t = Math.max(10, flushSeconds) * 20L;
-        flusher = host.getServer().getScheduler().runTaskTimer(host, () -> flush(true), t, t);
         for (Player p : host.getServer().getOnlinePlayers()) begin(p);
     }
 
     public void stop() {
         if (sampler != null) sampler.cancel();
-        if (flusher != null) flusher.cancel();
         flush(false);
     }
 
@@ -86,11 +85,23 @@ public final class StatsCollector implements Listener {
     private void add(UUID id, String key, long delta) {
         if (delta == 0) return;
         pending.computeIfAbsent(id, k -> new HashMap<>()).merge(key, delta, Long::sum);
+        queueFlush();
+    }
+
+    /** Jede Aenderung wird gleich geschrieben (im naechsten Tick gesammelt, damit viele Aenderungen im selben Tick nur einen Schreibvorgang ergeben). */
+    private void queueFlush() {
+        if (flushQueued || !host.isEnabled()) return;
+        flushQueued = true;
+        host.getServer().getScheduler().runTask(host, () -> {
+            flushQueued = false;
+            flush(true);
+        });
     }
 
     private void event(UUID id, String type, String detail, Location l) {
         pendingEvents.add(new StatsDb.Event(System.currentTimeMillis(), id.toString(), type, detail,
                 l == null ? "" : l.getWorld().getName(), l == null ? 0 : l.getBlockX(), l == null ? 0 : l.getBlockY(), l == null ? 0 : l.getBlockZ()));
+        queueFlush();
     }
 
     private static boolean counts(Player p) {
@@ -271,7 +282,11 @@ public final class StatsCollector implements Listener {
             try {
                 db.addAll(deltas, day);
                 db.addEvents(events);
-                db.pruneEvents(System.currentTimeMillis() - eventDays * 86_400_000L);
+                long now = System.currentTimeMillis();
+                if (now - lastPrune > 600_000L) {   // alte Ereignisse nur alle 10 Minuten aufraeumen
+                    lastPrune = now;
+                    db.pruneEvents(now - eventDays * 86_400_000L);
+                }
             } catch (SQLException ex) {
                 log.warning("PeakStats: Speichern fehlgeschlagen: " + ex.getMessage());
             }
