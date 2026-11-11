@@ -20,10 +20,12 @@ final class StatsWeb {
 
     private final WebRegistry web;
     private final StatsDb db;
+    private final HeadStore heads;
 
-    StatsWeb(WebRegistry web, StatsDb db) {
+    StatsWeb(WebRegistry web, StatsDb db, HeadStore heads) {
         this.web = web;
         this.db = db;
+        this.heads = heads;
     }
 
     void register(String script) {
@@ -32,6 +34,8 @@ final class StatsWeb {
         web.route("players", r -> guard(() -> WebResponse.json(onlineFlag(db.players()).toString())));
         web.route("player/*", r -> guard(() -> player(r)));
         web.route("top", r -> guard(() -> top(r)));
+        web.route("overview", r -> guard(this::overview));
+        web.route("head/*", r -> guard(() -> head(r)));
         web.route("visibility", r -> guard(() -> visibility(r)));
         web.route("set", r -> guard(() -> set(r)));
         web.route("reset", r -> guard(() -> reset(r)));
@@ -118,6 +122,15 @@ final class StatsWeb {
         JsonObject o = new JsonObject();
         o.addProperty("uuid", id.toString());
         o.addProperty("name", name);
+        for (var pe : db.players()) {
+            JsonObject po = pe.getAsJsonObject();
+            if (po.get("uuid").getAsString().equals(id.toString())) {
+                o.addProperty("firstSeen", po.get("firstSeen").getAsLong());
+                o.addProperty("lastSeen", po.get("lastSeen").getAsLong());
+            }
+        }
+        var online = Bukkit.getPlayer(id);
+        o.addProperty("online", online != null);
         JsonObject totals = new JsonObject();
         db.totals(id).forEach(totals::addProperty);
         o.add("totals", totals);
@@ -145,6 +158,47 @@ final class StatsWeb {
         return WebResponse.json(o.toString());
     }
 
+    private WebResponse head(WebRequest r) {
+        String[] p = r.path().split("/");
+        UUID id = p.length < 2 ? null : uuidOf(p[1]);
+        byte[] png = id == null ? null : heads.read(id);
+        return png == null ? WebResponse.error(404, "Kein Kopf gespeichert.") : WebResponse.bytes("image/png", png);
+    }
+    private WebResponse overview() throws Exception {
+        JsonObject o = new JsonObject();
+        o.addProperty("players", db.playerCount());
+        o.addProperty("online", Bukkit.getOnlinePlayers().size());
+        JsonObject sums = new JsonObject();
+        db.sumTotals().forEach(sums::addProperty);
+        o.add("totals", sums);
+        LocalDate since = LocalDate.now().minusDays(29);
+        JsonObject play = new JsonObject(), active = new JsonObject();
+        db.dailyAll(StatKeys.PLAY, since).forEach(play::addProperty);
+        db.activePerDay(since).forEach(active::addProperty);
+        o.add("playPerDay", play);
+        o.add("activePerDay", active);
+        JsonArray heat = new JsonArray();
+        for (int[] row : db.heatmap()) {
+            JsonArray r = new JsonArray();
+            for (int v : row) r.add(v);
+            heat.add(r);
+        }
+        o.add("heat", heat);
+        JsonObject podium = new JsonObject();
+        for (String k : new String[] {StatKeys.PLAY, StatKeys.KILLS_PLAYER, StatKeys.KILLS_MOB, StatKeys.DEATHS, StatKeys.MINED, StatKeys.PLACED, StatKeys.DISTANCE}) {
+            JsonArray a = new JsonArray();
+            for (StatsDb.Row row : db.top(k, null, 3, Set.of())) {
+                JsonObject x = new JsonObject();
+                x.addProperty("uuid", row.uuid());
+                x.addProperty("name", row.name());
+                x.addProperty("value", row.value());
+                a.add(x);
+            }
+            podium.add(k, a);
+        }
+        o.add("podium", podium);
+        return WebResponse.json(o.toString());
+    }
     /** Zeitraum -> Anfangstag; {@code null} = gesamt. */
     static LocalDate since(String period, LocalDate today) {
         return switch (period == null ? "total" : period) {

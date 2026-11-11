@@ -230,6 +230,41 @@ public final class StatsDb implements AutoCloseable {
         return m;
     }
 
+    // ---------- Uebersicht ----------
+
+    /** Summe aller Spieler je Hauptwert. */
+    public synchronized Map<String, Long> sumTotals() throws SQLException {
+        Map<String, Long> m = new LinkedHashMap<>();
+        try (Statement s = c.createStatement(); ResultSet r = s.executeQuery("SELECT key,SUM(value) FROM totals WHERE key NOT LIKE 'mob:%' AND key NOT LIKE 'mine:%' GROUP BY key")) {
+            while (r.next()) m.put(r.getString(1), r.getLong(2));
+        }
+        return m;
+    }
+
+    /** Anzahl verschiedener Spieler mit Spielzeit je Tag. */
+    public synchronized Map<String, Long> activePerDay(LocalDate since) throws SQLException {
+        Map<String, Long> m = new LinkedHashMap<>();
+        try (PreparedStatement q = c.prepareStatement("SELECT day,COUNT(DISTINCT uuid) FROM daily WHERE key=? AND day>=? GROUP BY day ORDER BY day")) {
+            q.setString(1, StatKeys.PLAY);
+            q.setString(2, since.toString());
+            try (ResultSet r = q.executeQuery()) { while (r.next()) m.put(r.getString(1), r.getLong(2)); }
+        }
+        return m;
+    }
+
+    /** Anmeldungen je Wochentag (0 = Montag) und Stunde aus den gespeicherten Ereignissen. */
+    public synchronized int[][] heatmap() throws SQLException {
+        int[][] h = new int[7][24];
+        try (Statement s = c.createStatement(); ResultSet r = s.executeQuery(
+                "SELECT CAST(strftime('%w', time/1000, 'unixepoch', 'localtime') AS INTEGER), CAST(strftime('%H', time/1000, 'unixepoch', 'localtime') AS INTEGER), COUNT(*) FROM events WHERE type='login' GROUP BY 1,2")) {
+            while (r.next()) h[(r.getInt(1) + 6) % 7][r.getInt(2)] = r.getInt(3);
+        }
+        return h;
+    }
+
+    public synchronized int playerCount() throws SQLException {
+        return count("players");
+    }
     // ---------- Ereignisse ----------
 
     public synchronized void addEvents(List<Event> events) throws SQLException {

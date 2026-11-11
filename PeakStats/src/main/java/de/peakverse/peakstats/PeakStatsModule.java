@@ -13,6 +13,7 @@ public final class PeakStatsModule implements PeakModule {
     private ModuleContext context;
     private StatsDb db;
     private StatsCollector collector;
+    private HeadStore heads;
 
     @Override
     public String id() {
@@ -34,14 +35,15 @@ public final class PeakStatsModule implements PeakModule {
             context.logger().severe("PeakStats: Datenbank nicht verfuegbar, Modul bleibt ohne Funktion: " + e.getMessage());
             return;
         }
-        collector = new StatsCollector(context.host(), db, context.logger(), context.config().getInt("afk-seconds", 300),
+        heads = new HeadStore(context.dataFolder().toPath().resolve("heads"), context.logger());
+        collector = new StatsCollector(context.host(), db, heads, context.logger(), context.config().getInt("afk-seconds", 300),
                 context.config().getInt("event-days", 90));
         Bukkit.getPluginManager().registerEvents(collector, context.host());
         collector.start();
         if (context.web().enabled()) {
             try (java.io.InputStream in = PeakStatsModule.class.getResourceAsStream("/modules/peakstats/panel.js")) {
                 if (in == null) throw new IOException("panel.js fehlt im Jar");
-                new StatsWeb(context.web(), db).register(new String(in.readAllBytes(), StandardCharsets.UTF_8));
+                new StatsWeb(context.web(), db, heads).register(new String(in.readAllBytes(), StandardCharsets.UTF_8));
             } catch (IOException e) {
                 context.logger().warning("Web-Seite von PeakStats nicht verfuegbar: " + e.getMessage());
             }

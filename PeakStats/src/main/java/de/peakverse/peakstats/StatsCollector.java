@@ -62,8 +62,11 @@ public final class StatsCollector implements Listener {
     private boolean flushQueued;
     private volatile long lastPrune;
 
-    public StatsCollector(Plugin host, StatsDb db, Logger log, int afkSeconds, int eventDays) {
+    private final HeadStore heads;
+
+    public StatsCollector(Plugin host, StatsDb db, HeadStore heads, Logger log, int afkSeconds, int eventDays) {
         this.host = host;
+        this.heads = heads;
         this.db = db;
         this.log = log;
         this.afkMillis = Math.max(30, afkSeconds) * 1000L;
@@ -143,11 +146,15 @@ public final class StatsCollector implements Listener {
         } catch (SQLException ex) {
             log.warning("PeakStats: " + ex.getMessage());
         }
+        String skinUrl = null;
+        for (var prop : p.getPlayerProfile().getProperties()) if ("textures".equals(prop.getName())) skinUrl = HeadStore.skinUrl(prop.getValue());
+        String skin = skinUrl;
         Map<String, Long> base = baseline;
         host.getServer().getScheduler().runTaskAsynchronously(host, () -> {
             try {
                 db.touch(id, name, now);
                 if (base != null) db.importBaseline(id, base);
+                if (skin != null) heads.store(id, skin);
             } catch (SQLException ex) {
                 log.warning("PeakStats: " + ex.getMessage());
             }
