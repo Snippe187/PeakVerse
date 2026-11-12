@@ -59,7 +59,8 @@ export default async function mount(root, ctx) {
 .ps-tl{display:grid;gap:6px;max-height:340px;overflow:auto}.ps-tl div{display:flex;gap:10px;align-items:center;font-size:13px}.ps-tl .pt{width:12px;height:12px;flex:none}
 .ps-row{display:flex;gap:10px;align-items:center;margin:4px 0}.ps-row .bar{flex:1;height:14px;background:var(--panel)}.ps-row .bar div{height:100%;background:var(--c)}
 .ps-empty{text-align:center;padding:30px 10px;color:var(--dim)}.ps-empty .big{font-size:48px}
-.ps-acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}`;
+.ps-acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.ps-live{margin-left:auto;color:#4fd18b;font-size:12px;font-weight:bold;align-self:center;letter-spacing:.05em}.ps-live.flash{animation:psflash .9s ease-out}@keyframes psflash{0%{color:#fff;text-shadow:0 0 10px #4fd18b}100%{color:#4fd18b;text-shadow:none}}`;
     document.head.appendChild(st);
   }
 
@@ -238,7 +239,7 @@ export default async function mount(root, ctx) {
   }
   function render() {
     const body = tab === 'overview' ? overviewTab() : tab === 'players' ? playersTab() : tab === 'top' ? topTab() : visTab();
-    root.replaceChildren(h('div', { class: 'page' }, h('div', { class: 'ps-tabs' }, TABS.map(([id, txt]) => h('button', { class: 'px-btn small' + (tab === id ? ' on' : ''), onclick: async () => { tab = id; if (id !== 'players') { cur = null; detail = null; } await refresh(); render(); } }, txt))), texBanner(), body));
+    root.replaceChildren(h('div', { class: 'page' }, h('div', { class: 'ps-tabs' }, TABS.map(([id, txt]) => h('button', { class: 'px-btn small' + (tab === id ? ' on' : ''), onclick: async () => { tab = id; if (id !== 'players') { cur = null; detail = null; } await refresh(); render(); } }, txt)), h('span', { class: 'ps-live', title: L('Die Werte aktualisieren sich von selbst', 'Values update by themselves') }, '● Live')), texBanner(), body));
   }
   async function refresh() {
     if (tab === 'top') { cat = (await call('catalog')) || cat; await loadTop(); }
@@ -246,7 +247,20 @@ export default async function mount(root, ctx) {
     else await loadAll();
   }
   async function loadAll() { cat = (await call('catalog')) || []; players = (await call('players')) || []; }
-  ctx.on(() => { if (!cur) refresh().then(render); });
+  // Live: der Server meldet jede Aenderung der Werte (hoechstens einmal pro Sekunde); die Seite laedt dann nur neu, wenn gerade nichts eingegeben wird
+  let liveTimer = null;
+  const formBusy = () => { const a = document.activeElement; return !!a && root.contains(a) && /^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName); };
+  async function liveRefresh() {
+    if (!root.isConnected || formBusy()) return;
+    const y = window.scrollY;
+    if (cur) detail = (await call('player/' + cur.uuid)) || detail; else await refresh();
+    if (!root.isConnected || formBusy()) return;
+    render();
+    window.scrollTo(0, y);
+    const b = root.querySelector('.ps-live');
+    if (b) { b.classList.remove('flash'); void b.offsetWidth; b.classList.add('flash'); }
+  }
+  ctx.on(d => { if (!d || d.module !== 'peakstats') return; clearTimeout(liveTimer); liveTimer = setTimeout(liveRefresh, 400); });
   await loadTex();
   await refresh();
   render();

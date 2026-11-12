@@ -14,6 +14,8 @@ public final class PeakStatsModule implements PeakModule {
     private StatsDb db;
     private StatsCollector collector;
     private HeadStore heads;
+    private final java.util.concurrent.atomic.AtomicBoolean livePending = new java.util.concurrent.atomic.AtomicBoolean();
+    private volatile long liveLast;
 
     @Override
     public String id() {
@@ -36,7 +38,7 @@ public final class PeakStatsModule implements PeakModule {
             return;
         }
         heads = new HeadStore(context.dataFolder().toPath().resolve("heads"), context.logger());
-        collector = new StatsCollector(context.host(), db, heads, context.logger(), context.config().getInt("afk-seconds", 300),
+        collector = new StatsCollector(context.host(), db, heads, this::notifyLive, context.logger(), context.config().getInt("afk-seconds", 300),
                 context.config().getInt("event-days", 90));
         Bukkit.getPluginManager().registerEvents(collector, context.host());
         collector.start();
@@ -50,6 +52,19 @@ public final class PeakStatsModule implements PeakModule {
         }
     }
 
+    /** Sagt allen offenen Web-Seiten, dass sich Werte geaendert haben, hoechstens einmal pro Sekunde (es wird nichts verschluckt: eine Meldung folgt spaeter). */
+    private void notifyLive() {
+        ModuleContext c = context;
+        if (c == null || !c.web().enabled() || !c.host().isEnabled()) return;
+        if (!livePending.compareAndSet(false, true)) return;
+        long wait = Math.max(0, 1000 - (System.currentTimeMillis() - liveLast));
+        Bukkit.getScheduler().runTaskLaterAsynchronously(c.host(), () -> {
+            livePending.set(false);
+            liveLast = System.currentTimeMillis();
+            ModuleContext cc = context;
+            if (cc != null) cc.web().changed("live", "");
+        }, Math.max(1, wait / 50));
+    }
     @Override
     public void contributePack(PackSink sink) {
         // Keine Pack-Dateien

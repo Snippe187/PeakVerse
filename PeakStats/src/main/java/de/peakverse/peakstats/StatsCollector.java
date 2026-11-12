@@ -63,9 +63,11 @@ public final class StatsCollector implements Listener {
     private volatile long lastPrune;
 
     private final HeadStore heads;
+    private final Runnable onChange;
 
-    public StatsCollector(Plugin host, StatsDb db, HeadStore heads, Logger log, int afkSeconds, int eventDays) {
+    public StatsCollector(Plugin host, StatsDb db, HeadStore heads, Runnable onChange, Logger log, int afkSeconds, int eventDays) {
         this.host = host;
+        this.onChange = onChange;
         this.heads = heads;
         this.db = db;
         this.log = log;
@@ -155,6 +157,7 @@ public final class StatsCollector implements Listener {
                 db.touch(id, name, now);
                 if (base != null) db.importBaseline(id, base);
                 if (skin != null) heads.store(id, skin);
+                onChange.run();
             } catch (SQLException ex) {
                 log.warning("PeakStats: " + ex.getMessage());
             }
@@ -173,6 +176,7 @@ public final class StatsCollector implements Listener {
         host.getServer().getScheduler().runTaskAsynchronously(host, () -> {
             try {
                 db.touch(id, name, now);
+                onChange.run();
             } catch (SQLException ex) {
                 log.warning("PeakStats: " + ex.getMessage());
             }
@@ -294,6 +298,7 @@ public final class StatsCollector implements Listener {
                     lastPrune = now;
                     db.pruneEvents(now - eventDays * 86_400_000L);
                 }
+                onChange.run();
             } catch (SQLException ex) {
                 log.warning("PeakStats: Speichern fehlgeschlagen: " + ex.getMessage());
             }
