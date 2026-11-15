@@ -59,6 +59,7 @@ public final class AdminWeb {
         web.route("backups", r -> main(() -> WebResponse.json(backups().toString())));
         web.route("backups/create", this::backupCreate);
         web.route("backups/delete", this::backupDelete);
+        web.route("backups/download", this::backupDownload);
         web.route("itemlog", r -> {
             var q = r.query();
             int limit = 300;
@@ -366,6 +367,17 @@ public final class AdminWeb {
             if (!control.backupNow("web", keep, err -> web.changed("backups", r.admin()))) throw new IllegalStateException("Es laeuft schon eine Sicherung.");
             return backups();
         });
+    }
+
+    /** Laedt eine Sicherung herunter (nur Operatoren; der Name wird gegen das feste Muster geprueft, keine fremden Dateien). */
+    private WebResponse backupDownload(WebRequest r) throws Exception {
+        requireOp(r);
+        String name = r.query().get("name");
+        if (name == null) throw new IllegalArgumentException("Name fehlt");
+        java.nio.file.Path p = control.backups().file(name);
+        if (!java.nio.file.Files.isRegularFile(p)) return WebResponse.error(404, "Sicherung nicht gefunden");
+        web.log(r.admin(), "Sicherung heruntergeladen: " + name);
+        return WebResponse.download(p, name, "application/zip");
     }
 
     private WebResponse backupDelete(WebRequest r) throws Exception {
