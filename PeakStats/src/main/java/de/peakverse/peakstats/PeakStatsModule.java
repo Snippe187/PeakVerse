@@ -42,6 +42,14 @@ public final class PeakStatsModule implements PeakModule {
                 context.config().getInt("event-days", 90));
         Bukkit.getPluginManager().registerEvents(collector, context.host());
         collector.start();
+        StatsCommands commands = new StatsCommands(context.host(), db, context.logger());
+        for (String n : java.util.List.of("stats", "top")) {
+            org.bukkit.command.PluginCommand c = context.host().getCommand(n);
+            if (c != null) {
+                c.setExecutor(commands);
+                c.setTabCompleter(commands);
+            }
+        }
         if (context.web().enabled()) {
             try (java.io.InputStream in = PeakStatsModule.class.getResourceAsStream("/modules/peakstats/panel.js")) {
                 if (in == null) throw new IOException("panel.js fehlt im Jar");

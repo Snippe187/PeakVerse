@@ -41,6 +41,12 @@ commands:
   delwarp:
     description: Warp loeschen (Operatoren)
     usage: /delwarp <name>
+  stats:
+    description: Statistik eines Spielers (nur freigegebene Werte)
+    usage: /stats [spieler]
+  top:
+    description: Bestenliste (Top 10), klickbar
+    usage: /top [wert] [heute|woche|monat|gesamt]
   peaksoundvote:
     description: Abstimmen, den laufenden Song der Jukebox in deiner Naehe zu ueberspringen
     usage: /peaksoundvote

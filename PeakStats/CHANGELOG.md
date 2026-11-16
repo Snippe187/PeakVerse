@@ -1,5 +1,8 @@
 # Changelog
 
+## Unveroeffentlicht
+- Befehle **/stats [Spieler]** und **/top [Wert] [heute|woche|monat|gesamt]**: Chat-Ausgabe mit Klick. Spieler sehen nur freigegebene Werte, Operatoren alle. Mit Konsole geprueft; im Spiel als Spieler noch nicht.
+
 ## 0.1.8
 - Neues Modul **PeakStats** (Paket 1): zaehlt Spielzeit (aktiv und AFK getrennt), Anmeldungen, Kills (Spieler und Mob-Arten), Tode, Schaden, abgebaute Bloecke (je Blockart, Erze), gesetzte Bloecke, Strecke und hergestellte Items. Creative zaehlt nicht fuer Kills, Bloecke und Strecke; selbst gesetzte Bloecke zaehlen beim schnellen Abbauen nicht.
 - Alle Werte werden sofort gespeichert (jede Aenderung gleich, keine Zeitabstaende).
