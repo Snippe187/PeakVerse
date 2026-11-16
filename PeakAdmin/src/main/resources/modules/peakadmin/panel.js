@@ -17,7 +17,7 @@ export default async function mount(root, ctx) {
 
   if (!document.getElementById('pa-style')) {
     const st = document.createElement('style'); st.id = 'pa-style';
-    st.textContent = `.pa-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}.pa-tabs button.on{background:var(--accent);color:var(--on-accent)}
+    st.textContent = `.pa-tabs{display:flex;gap:18px;flex-wrap:wrap;margin-bottom:12px}.pa-tg{display:grid;gap:4px}.pa-tgl{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--dim)}.pa-tgb{display:flex;gap:6px;flex-wrap:wrap}.pa-tabs button.on{background:var(--accent);color:var(--on-accent)}
 .pa-cols{display:grid;grid-template-columns:300px 1fr;gap:14px;align-items:start}@media(max-width:900px){.pa-cols{grid-template-columns:1fr}}
 .pa-list{max-height:70vh;overflow:auto}.pa-row{display:flex;gap:8px;align-items:center;padding:6px 8px;cursor:pointer;border:2px solid transparent}.pa-row:hover{background:var(--panel2)}.pa-row.sel{border-color:var(--accent)}
 .pa-dot{width:10px;height:10px;background:var(--dim)}.pa-dot.on{background:var(--good)}
@@ -333,10 +333,17 @@ export default async function mount(root, ctx) {
         h('span', {}, e.item + (e.amount ? ' ×' + e.amount : '')), h('span', { class: 'sub' }, e.detail || ''))) : h('div', { class: 'sub' }, L('Noch keine Einträge.', 'No entries yet.'))));
   }
   // ---------- Rahmen ----------
-  const TABS = [['players', L('Spieler', 'Players')], ['console', L('Konsole', 'Console')], ['status', 'Status'], ['chat', 'Chat'], ['perms', L('Rechte (LuckPerms)', 'Permissions (LuckPerms)')], ['itemlog', L('Item-Log', 'Item log')], ['backups', L('Sicherungen & Neustart', 'Backups & restart')]];
+  // Gruppiert: Leute, Server, Protokoll
+  const TAB_GROUPS = [
+    [L('Leute', 'People'), [['players', L('Spieler', 'Players')], ['perms', L('Rechte (LuckPerms)', 'Permissions (LuckPerms)')]]],
+    [L('Server', 'Server'), [['status', 'Status'], ['console', L('Konsole', 'Console')], ['chat', 'Chat'], ['backups', L('Sicherungen & Neustart', 'Backups & restart')]]],
+    [L('Protokoll', 'Logs'), [['itemlog', L('Item-Log', 'Item log')]]]
+  ];
   function render() {
     const body = tab === 'players' ? playersTab() : tab === 'console' ? consoleTab() : tab === 'status' ? statusTab() : tab === 'chat' ? chatTab() : tab === 'perms' ? permsTab() : tab === 'itemlog' ? logTab() : backupsTab();
-    root.replaceChildren(h('div', { class: 'page' }, h('div', { class: 'pa-tabs' }, TABS.map(([id, label]) => h('button', { class: 'px-btn small' + (tab === id ? ' on' : ''), onclick: () => go(id) }, label))), body));
+    const bar = h('div', { class: 'pa-tabs' }, TAB_GROUPS.map(([gl, items]) => h('div', { class: 'pa-tg' }, h('span', { class: 'pa-tgl' }, gl),
+      h('div', { class: 'pa-tgb' }, items.map(([id, label]) => h('button', { class: 'px-btn small' + (tab === id ? ' on' : ''), onclick: () => go(id) }, label))))));
+    root.replaceChildren(h('div', { class: 'page' }, bar, body));
   }
   async function go(id) {
     tab = id;
