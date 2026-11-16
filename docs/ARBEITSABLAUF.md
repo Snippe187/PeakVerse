@@ -24,7 +24,7 @@ Stand: 2026-11-11. Dieser Ablauf gilt für jede neue Funktion. Er hält fest, wi
 
 | # | Paket | Inhalt | Abhängigkeit |
 |---|-------|--------|--------------|
-| 1 | PeakStats Paket 2 | `/stats`, `/top` im Chat (klickbar), nur freigegebene Werte; PeakBoard-Zeile mit festen Werten | Freigabe je Wert (fertig) |
+| 1 | PeakStats Paket 2 (fertig, nicht im Spiel als Spieler geprueft) | `/stats`, `/top` im Chat (klickbar), nur freigegebene Werte; PeakBoard-Zeile mit festen Werten | Freigabe je Wert (fertig) |
 | 2 | PeakStats Paket 3 | Spieler-Webseite: Einmal-Link per `/stats web`, eigene Werte und Verlauf, Bestenlisten, Spieler ansehen, Vergleich | Paket 1 |
 | 3 | PeakStats Paket 4 | Mod-Bildschirm Statistik im Pausenmenü, Stil wie die Fortschrittsansicht | Paket 1, Datenkanal PeakCore |
 | 4 | Achievements Web | Spieler-Bereich im Web: Fortschritt je Spieler ansehen und vergeben, eigene Achievement-Rolle | PeakAdmin-Spielerseite |

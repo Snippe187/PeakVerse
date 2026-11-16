@@ -1,5 +1,8 @@
 # Changelog
 
+## Unveroeffentlicht
+- Sicherungen lassen sich im Web **herunterladen** (Knopf neben jeder Sicherung, nur Operatoren, protokolliert).
+
 ## 0.1.8
 - Neues Modul **PeakAdmin**: Seite "Verwaltung" in der Web-Oberflaeche.
 - **Spieler**: Liste (online/offline), Kick, Ban/Entbannen, Stummschalten, Whitelist, OP (nur Operatoren), Heilen, Spielmodus, XP-Level, Teleport zu Spieler; Inventar und Endertruhe im Minecraft-Look mit Item-Icons und Tooltips ansehen, Gegenstaende entfernen/geben/alles leeren; Fortschritte (Advancements) ansehen, einzeln vergeben/entziehen (Baum wie im Spiel mit Icons und Tooltips). Inventar, Endertruhe und Fortschritte nur bei Spielern, die online sind.
