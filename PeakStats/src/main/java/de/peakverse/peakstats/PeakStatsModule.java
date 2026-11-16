@@ -14,6 +14,7 @@ public final class PeakStatsModule implements PeakModule {
     private StatsDb db;
     private StatsCollector collector;
     private HeadStore heads;
+    private StatsLookupImpl lookup;
     private final java.util.concurrent.atomic.AtomicBoolean livePending = new java.util.concurrent.atomic.AtomicBoolean();
     private volatile long liveLast;
 
@@ -42,6 +43,8 @@ public final class PeakStatsModule implements PeakModule {
                 context.config().getInt("event-days", 90));
         Bukkit.getPluginManager().registerEvents(collector, context.host());
         collector.start();
+        lookup = new StatsLookupImpl(db);
+        Bukkit.getServicesManager().register(de.peakverse.core.api.stats.StatsLookup.class, lookup, context.host(), org.bukkit.plugin.ServicePriority.Normal);
         StatsCommands commands = new StatsCommands(context.host(), db, context.logger());
         for (String n : java.util.List.of("stats", "top")) {
             org.bukkit.command.PluginCommand c = context.host().getCommand(n);
@@ -80,6 +83,8 @@ public final class PeakStatsModule implements PeakModule {
 
     @Override
     public void disable() {
+        if (lookup != null) Bukkit.getServicesManager().unregister(lookup);
+        lookup = null;
         if (collector != null) collector.stop();
         if (db != null) db.close();
         collector = null;
